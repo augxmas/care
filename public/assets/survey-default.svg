@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 200" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eff6ff"/>
+      <stop offset="55%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#bfdbfe"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1100" height="200" fill="url(#bg)"/>
+  <circle cx="980" cy="50"  r="70" fill="#bfdbfe" opacity="0.55"/>
+  <circle cx="1060" cy="150" r="46" fill="#93c5fd" opacity="0.45"/>
+  <circle cx="90"   cy="160" r="58" fill="#dbeafe" opacity="0.60"/>
+  <circle cx="870"  cy="140" r="22" fill="#93c5fd" opacity="0.35"/>
+
+  <g transform="translate(60,55)">
+    <path d="M45 95 C 45 75 22 60  8 78  C -8 100 12 130 45 145 C 78 130 98 100 82 78  C 68 60 45 75 45 95 Z"
+          fill="url(#card)"/>
+    <rect x="38"  y="78"  width="14" height="38" fill="#fff" rx="2"/>
+    <rect x="26"  y="90"  width="38" height="14" fill="#fff" rx="2"/>
+  </g>
+
+  <text x="180" y="92"  font-family="'Noto Sans KR','Apple SD Gothic Neo',sans-serif"
+        font-size="34" font-weight="800" fill="#1e3a8a" letter-spacing="-1">사전 문진</text>
+  <text x="180" y="125" font-family="'Noto Sans KR','Apple SD Gothic Neo',sans-serif"
+        font-size="15" font-weight="500" fill="#475569">정확한 진단을 위해 정성껏 답변해 주세요</text>
+  <text x="180" y="148" font-family="'Noto Sans KR','Apple SD Gothic Neo',sans-serif"
+        font-size="12" font-weight="400" fill="#64748b">소요 시간 약 3–5분</text>
+</svg>

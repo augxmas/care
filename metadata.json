@@ -1,0 +1,6 @@
+{
+  "name": "Patient CRM",
+  "description": "환자 및 마케팅 관리용 고성능 백엔드 CRM 시스템 (Patient & Marketing Management CRM System)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

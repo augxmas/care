@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>캠페인 수집 폼</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/common.css">
+  <style>
+    body { background:#f5f7fb; min-height:100vh; overflow:hidden; }
+    .form-shell { width:min(92vw, 560px); height:calc(100vh - 84px); margin:42px auto; display:flex; }
+    .form-panel { background:#fff; border:1px solid var(--gray-200); border-radius:8px; box-shadow:0 2px 10px rgba(15,23,42,.08); overflow:hidden; display:flex; flex-direction:column; width:100%; min-height:0; }
+    .form-head { padding:22px 24px; border-bottom:1px solid #1d4ed8; background:#2563eb; text-align:center; flex:0 0 auto; }
+    .form-head h1 { margin:0; font-size:22px; color:#fff; letter-spacing:0; }
+    .form-head p { margin:8px 0 0; color:#dbeafe; font-size:14px; line-height:1.55; }
+    #collectForm { display:flex; flex-direction:column; min-height:0; flex:1; }
+    .form-body { padding:22px 24px; overflow-y:auto; min-height:0; flex:1; }
+    .preview-bar { margin-bottom:14px; padding:10px 12px; border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; border-radius:6px; font-size:13px; font-weight:700; }
+    .preview-hidden { margin-bottom:16px; padding:12px; border:1px dashed #93c5fd; border-radius:8px; background:#eff6ff; }
+    .preview-hidden-title { margin-bottom:8px; font-size:12px; font-weight:800; color:#1d4ed8; }
+    .preview-hidden-list { display:grid; gap:8px; }
+    .preview-hidden-item { display:grid; grid-template-columns:120px 1fr; gap:8px; align-items:center; font-size:12px; }
+    .preview-hidden-key { min-width:0; color:#1e40af; font-weight:800; }
+    .preview-hidden-key span { font-weight:500; color:#60a5fa; }
+    .preview-hidden-value { min-width:0; padding:7px 9px; border:1px solid #bfdbfe; border-radius:6px; background:#fff; color:var(--gray-700); word-break:break-word; }
+    .empty-state { padding:28px; text-align:center; color:var(--gray-500); }
+    .submit-row { display:flex; justify-content:center; gap:8px; padding:14px 24px 24px; border-top:1px solid var(--gray-100); background:#fff; flex:0 0 auto; }
+    .field-error { display:none; margin-top:5px; color:var(--danger); font-size:12px; font-weight:600; }
+    .form-control.is-invalid { border-color:var(--danger); background:#fff5f5; }
+    @media (max-width: 640px) {
+      body { overflow:auto; }
+      .form-shell { height:calc(100vh - 36px); margin:18px auto; }
+      .form-head, .form-body { padding:18px; }
+      .submit-row { padding:0 18px 18px; }
+      .preview-hidden-item { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="form-shell">
+    <section class="form-panel">
+      <div class="form-head">
+        <h1 id="title">캠페인 수집 폼</h1>
+        <p id="description"></p>
+      </div>
+      <form id="collectForm">
+        <div class="form-body" id="fieldHost">
+          <div class="empty-state">폼을 불러오는 중입니다.</div>
+        </div>
+        <div class="submit-row">
+          <button class="btn btn-primary" id="submitBtn" type="submit">제출</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="/js/alert.js"></script>
+  <script>
+    const campaignId = location.pathname.split('/').filter(Boolean).pop();
+    const previewMode = new URLSearchParams(location.search).get('preview') === '1';
+    const fieldHost = document.getElementById('fieldHost');
+    const form = document.getElementById('collectForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function esc(v) {
+      return String(v || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    }
+
+    function inputType(key) {
+      if (key === 'email' || key === 'referrer_email') return 'email';
+      if (key === 'birth_ym' || key === 'birth_ymd' || key === 'mobile' || key === 'phone' || key === 'postal_code' || key === 'payment_amount') return 'text';
+      return 'text';
+    }
+
+    const CHANNELS = [
+      { key: 'facebook', label: 'Facebook' },
+      { key: 'x', label: 'X' },
+      { key: 'line', label: 'LINE' },
+      { key: 'instagram', label: 'Instagram' },
+    ];
+    function channelLabel(key) {
+      return (CHANNELS.find((ch) => ch.key === key) || {}).label || key;
+    }
+    function channelOptions(csv) {
+      const allowed = new Set(CHANNELS.map((ch) => ch.key));
+      return String(csv || '')
+        .split(',')
+        .map((s) => s.trim().toLowerCase())
+        .filter((s, idx, arr) => allowed.has(s) && arr.indexOf(s) === idx);
+    }
+    function fieldValuePreview(f) {
+      if (f.key !== 'channel') return f.defaultValue || '(기본값 없음)';
+      const labels = channelOptions(f.defaultValue).map(channelLabel);
+      return labels.length ? labels.join(', ') : '(기본값 없음)';
+    }
+
+    const NATIONALITIES = ['일본', '중국', '베트남', '태국', '북미', '중동', '기타'];
+    const FIELD_RULES = {
+      birth_ymd: {
+        digits: true,
+        max: 8,
+        message: '생년월일은 yyyymmdd 형식의 숫자 8자리로 입력하세요.',
+        format: (d) => d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}` : d,
+        normalize: (v) => digitsOnly(v).slice(0, 8),
+        valid: (d) => /^\d{8}$/.test(d),
+      },
+      birth_ym: {
+        digits: true,
+        max: 6,
+        message: '생년월은 yyyymm 형식의 숫자 6자리로 입력하세요.',
+        format: (d) => d.length === 6 ? `${d.slice(0,4)}-${d.slice(4,6)}` : d,
+        normalize: (v) => digitsOnly(v).slice(0, 6),
+        valid: (d) => /^\d{6}$/.test(d),
+      },
+      mobile: {
+        digits: true,
+        max: 11,
+        message: '모바일은 숫자 11자리로 입력하세요.',
+        format: formatPhone11,
+        normalize: (v) => digitsOnly(v).slice(0, 11),
+        valid: (d) => /^\d{11}$/.test(d),
+      },
+      phone: {
+        digits: true,
+        max: 11,
+        message: '전화는 숫자 10~11자리로 입력하세요. 02로 시작하는 서울 번호는 10자리도 가능합니다.',
+        format: formatPhone,
+        normalize: (v) => digitsOnly(v).slice(0, 11),
+        valid: (d) => /^02\d{8}$/.test(d) || /^\d{11}$/.test(d),
+      },
+      postal_code: {
+        digits: true,
+        max: 10,
+        message: '우편번호는 숫자만 입력하세요.',
+        normalize: (v) => digitsOnly(v).slice(0, 10),
+        valid: (d) => /^\d*$/.test(d),
+      },
+      email: {
+        message: '이메일 양식을 확인하세요.',
+        normalize: (v) => String(v || '').trim(),
+        valid: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      },
+      referrer_email: {
+        message: '추천인 이메일 양식을 확인하세요.',
+        normalize: (v) => String(v || '').trim(),
+        valid: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      },
+    };
+
+    function digitsOnly(v) {
+      return String(v || '').replace(/\D/g, '');
+    }
+    function formatPhone11(d) {
+      return d.length === 11 ? `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7,11)}` : d;
+    }
+    function formatPhone(d) {
+      if (/^02\d{8}$/.test(d)) return `${d.slice(0,2)}-${d.slice(2,6)}-${d.slice(6,10)}`;
+      return formatPhone11(d);
+    }
+    function setFieldError(el, msg) {
+      const err = document.getElementById(`${el.id}_err`);
+      el.classList.toggle('is-invalid', !!msg);
+      if (err) {
+        err.textContent = msg || '';
+        err.style.display = msg ? 'block' : 'none';
+      }
+    }
+    function validateField(el, notify = true) {
+      const key = el.dataset.key;
+      if (!key) return true;
+      const required = el.required;
+      if (required && !String(el.value || '').trim()) {
+        if (notify) setFieldError(el, `${el.dataset.label || '필수'} 항목을 입력하세요.`);
+        return false;
+      }
+      const rule = FIELD_RULES[key];
+      if (rule) {
+        const normalized = rule.normalize(el.value);
+        if (rule.digits) el.value = normalized;
+        if (normalized && !rule.valid(normalized)) {
+          if (notify) setFieldError(el, rule.message);
+          return false;
+        }
+        if (rule.format && normalized) el.value = rule.format(normalized);
+      }
+      if (notify) setFieldError(el, '');
+      return true;
+    }
+    function bindFieldValidation() {
+      fieldHost.querySelectorAll('[data-key]').forEach((el) => {
+        const rule = FIELD_RULES[el.dataset.key];
+        if (rule?.digits) {
+          el.addEventListener('input', () => {
+            el.value = digitsOnly(el.value).slice(0, rule.max || 99);
+            setFieldError(el, '');
+          });
+          el.addEventListener('focus', () => { el.value = digitsOnly(el.value); });
+        }
+        el.addEventListener('blur', () => validateField(el, true));
+        if (el.tagName === 'SELECT') el.addEventListener('change', () => validateField(el, true));
+      });
+    }
+
+    function inputAttrs(key) {
+      const attrs = {
+        birth_ymd: 'inputmode="numeric" maxlength="8" autocomplete="off"',
+        birth_ym: 'inputmode="numeric" maxlength="6" autocomplete="off"',
+        mobile: 'inputmode="numeric" maxlength="11" autocomplete="tel"',
+        phone: 'inputmode="numeric" maxlength="11" autocomplete="tel"',
+        postal_code: 'inputmode="numeric" maxlength="10" autocomplete="postal-code"',
+        email: 'autocomplete="email"',
+        referrer_email: 'autocomplete="email"',
+      };
+      return attrs[key] || '';
+    }
+    function defaultPlaceholder(key, fallback) {
+      if (fallback) return fallback;
+      const map = {
+        birth_ymd: 'yyyymmdd',
+        birth_ym: 'yyyymm',
+        mobile: '01012345678',
+        phone: '01012345678',
+        postal_code: '숫자만 입력',
+        email: 'example@email.com',
+        referrer_email: 'example@email.com',
+      };
+      return map[key] || '';
+    }
+
+    function renderFields(fields) {
+      const visible = fields.filter((f) => !f.hidden);
+      const hidden = fields.filter((f) => f.hidden);
+      const parts = [];
+      if (previewMode) parts.push('<div class="preview-bar">미리보기 모드입니다. 실제 제출은 비활성화되어 있습니다.</div>');
+      hidden.forEach((f) => {
+        parts.push(`<input type="hidden" name="${esc(f.key)}" value="${esc(f.defaultValue)}">`);
+      });
+      if (previewMode && hidden.length) {
+        parts.push(`
+          <div class="preview-hidden">
+            <div class="preview-hidden-title">숨김 항목 미리보기 (${hidden.length}개)</div>
+            <div class="preview-hidden-list">
+              ${hidden.map((f) => `
+                <div class="preview-hidden-item">
+                  <div class="preview-hidden-key">${esc(f.label)} <span>(${esc(f.key)})</span></div>
+                  <div class="preview-hidden-value">${esc(fieldValuePreview(f))}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `);
+      }
+      if (!visible.length) {
+        parts.push('<div class="empty-state">표시할 입력 항목이 없습니다.</div>');
+      }
+      visible.forEach((f) => {
+        const required = f.required ? ' required' : '';
+        const reqMark = f.required ? ' <span class="required">*</span>' : '';
+        if (f.key === 'channel') {
+          const options = channelOptions(f.defaultValue);
+          parts.push(`
+            <div class="form-group">
+              <label class="form-label" for="cf_${esc(f.key)}">${esc(f.label)}${reqMark}</label>
+              <select class="form-control" id="cf_${esc(f.key)}" name="${esc(f.key)}" data-key="${esc(f.key)}" data-label="${esc(f.label)}"${required}>
+                <option value="">${esc(f.placeholder || '채널을 선택하세요')}</option>
+                ${options.map((key) => `<option value="${esc(key)}">${esc(channelLabel(key))}</option>`).join('')}
+              </select>
+              <div class="field-error" id="cf_${esc(f.key)}_err"></div>
+            </div>
+          `);
+          return;
+        }
+        if (f.key === 'nationality') {
+          parts.push(`
+            <div class="form-group">
+              <label class="form-label" for="cf_${esc(f.key)}">${esc(f.label)}${reqMark}</label>
+              <select class="form-control" id="cf_${esc(f.key)}" name="${esc(f.key)}" data-key="${esc(f.key)}" data-label="${esc(f.label)}"${required}>
+                <option value="">${esc(f.placeholder || '국적을 선택하세요')}</option>
+                ${NATIONALITIES.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join('')}
+              </select>
+              <div class="field-error" id="cf_${esc(f.key)}_err"></div>
+            </div>
+          `);
+          return;
+        }
+        if (f.key === 'gender') {
+          parts.push(`
+            <div class="form-group">
+              <label class="form-label" for="cf_${esc(f.key)}">${esc(f.label)}${reqMark}</label>
+              <select class="form-control" id="cf_${esc(f.key)}" name="${esc(f.key)}" data-key="${esc(f.key)}" data-label="${esc(f.label)}"${required}>
+                <option value="">${esc(f.placeholder || '성별을 선택하세요')}</option>
+                <option value="M">남</option>
+                <option value="F">여</option>
+              </select>
+              <div class="field-error" id="cf_${esc(f.key)}_err"></div>
+            </div>
+          `);
+          return;
+        }
+        parts.push(`
+          <div class="form-group">
+            <label class="form-label" for="cf_${esc(f.key)}">${esc(f.label)}${reqMark}</label>
+            <input class="form-control" id="cf_${esc(f.key)}" name="${esc(f.key)}" type="${inputType(f.key)}"
+              value="${esc(f.defaultValue)}" placeholder="${esc(defaultPlaceholder(f.key, f.placeholder))}" data-key="${esc(f.key)}" data-label="${esc(f.label)}"${required} ${inputAttrs(f.key)}>
+            <div class="field-error" id="cf_${esc(f.key)}_err"></div>
+          </div>
+        `);
+      });
+      fieldHost.innerHTML = parts.join('');
+      bindFieldValidation();
+    }
+
+    async function loadForm() {
+      try {
+        const res = await fetch(`/api/campaigns/form/${encodeURIComponent(campaignId)}`);
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || '폼을 불러오지 못했습니다.');
+        document.getElementById('title').textContent = data.data.campaign_name || '캠페인 수집 폼';
+        document.getElementById('description').textContent = data.data.description || '';
+        renderFields(data.data.fields || []);
+        if (previewMode) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = '미리보기';
+        }
+      } catch (err) {
+        fieldHost.innerHTML = `<div class="empty-state">${esc(err.message || '폼을 불러오지 못했습니다.')}</div>`;
+        submitBtn.disabled = true;
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (previewMode) return;
+      const controls = Array.from(fieldHost.querySelectorAll('[data-key]'));
+      const valid = controls.every((el) => validateField(el, true));
+      if (!valid) return;
+      const payload = Object.fromEntries(new FormData(form).entries());
+      ['birth_ymd', 'birth_ym', 'mobile', 'phone', 'postal_code'].forEach((key) => {
+        if (payload[key] != null) payload[key] = digitsOnly(payload[key]);
+      });
+      ['email', 'referrer_email'].forEach((key) => {
+        if (payload[key] != null) payload[key] = String(payload[key]).trim();
+      });
+      submitBtn.disabled = true;
+      submitBtn.textContent = '제출 중...';
+      try {
+        const res = await fetch(`/api/campaigns/form/${encodeURIComponent(campaignId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) return MxAlert.error(data.error || '제출에 실패했습니다.');
+        await MxAlert.alert(data.message || '제출되었습니다.', { title: '제출 완료' });
+        form.reset();
+      } catch {
+        MxAlert.error('서버 오류가 발생했습니다.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '제출';
+      }
+    });
+
+    loadForm();
+  </script>
+</body>
+</html>

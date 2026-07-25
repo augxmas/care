@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 예약 일정</title>
+  <link rel="stylesheet" href="/css/common.css">
+  <style>
+    body { background: var(--gray-50, #f8fafc); }
+    .ms-wrap { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+    .ms-card { background: #fff; border: 1px solid var(--gray-200, #e5e7eb); border-radius: 12px; padding: 28px; }
+    .ms-head { text-align: center; margin-bottom: 22px; }
+    .ms-head h1 { font-size: 20px; color: var(--primary, #2563eb); margin: 0 0 4px; }
+    .ms-head p { font-size: 13px; color: var(--gray-500, #6b7280); margin: 0; }
+    .ms-appt { border: 1px solid var(--gray-200, #e5e7eb); border-left: 4px solid var(--primary, #2563eb); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+    .ms-appt.operating { border-left-color: #7c3aed; }
+    .ms-appt .t { font-size: 15px; font-weight: 700; color: var(--gray-800, #1f2937); }
+    .ms-appt .meta { font-size: 13px; color: var(--gray-500, #6b7280); margin-top: 4px; }
+    .ms-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #dbeafe; color: #1e40af; margin-left: 6px; }
+    .ms-badge.operating { background: #ede9fe; color: #5b21b6; }
+    .ms-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .ms-empty { text-align: center; color: var(--gray-400, #9ca3af); padding: 40px 0; font-size: 14px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="ms-wrap">
+    <!-- 로그인 -->
+    <div class="ms-card" id="loginCard">
+      <div class="ms-head"><h1>내 예약 일정</h1><p id="loginHospital">로그인 후 예약 일정을 확인하세요.</p></div>
+      <div class="form-group"><label class="form-label">이메일</label><input type="email" class="form-control" id="email" placeholder="이메일"></div>
+      <div class="form-group"><label class="form-label">비밀번호</label><input type="password" class="form-control" id="password" placeholder="비밀번호"></div>
+      <button class="btn btn-primary" id="loginBtn" style="width:100%;margin-top:8px">로그인</button>
+      <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:14px">예약 안내 메일에 포함된 임시 비밀번호로 로그인하세요.</p>
+    </div>
+
+    <!-- 비밀번호 변경 (강제) -->
+    <div class="ms-card hidden" id="resetCard">
+      <div class="ms-head"><h1>비밀번호 변경</h1><p>최초 로그인 시 비밀번호를 변경해야 합니다.</p></div>
+      <div class="form-group"><label class="form-label">현재(임시) 비밀번호</label><input type="password" class="form-control" id="curPw"></div>
+      <div class="form-group"><label class="form-label">새 비밀번호</label><input type="password" class="form-control" id="newPw" placeholder="대소문자·숫자·특수문자 포함 8자 이상"></div>
+      <button class="btn btn-primary" id="resetBtn" style="width:100%;margin-top:8px">변경하기</button>
+    </div>
+
+    <!-- 일정 목록 -->
+    <div class="hidden" id="listCard">
+      <div class="ms-top">
+        <div><span id="custName" style="font-weight:700"></span> <span style="color:var(--gray-400);font-size:13px" id="custHospital"></span></div>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">로그아웃</button>
+      </div>
+      <div id="apptList"></div>
+    </div>
+  </div>
+
+  <script src="/js/alert.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const hParam = params.get('h');
+    const STATUS = { consulting: '진료', operating: '수술' };
+
+    function show(id) { ['loginCard', 'resetCard', 'listCard'].forEach(x => document.getElementById(x).classList.toggle('hidden', x !== id)); }
+
+    async function api(method, url, body) {
+      const r = await fetch(url, { method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) { const e = new Error(d.error || '요청 실패'); e.payload = d; throw e; }
+      return d;
+    }
+
+    async function checkSession() {
+      try {
+        const d = await api('GET', '/api/auth/me');
+        if (d.user.role !== 'customer') { show('loginCard'); return; }
+        if (d.user.resetRequired) { show('resetCard'); return; }
+        loadList(d.user);
+      } catch { show('loginCard'); }
+    }
+
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      if (!email || !password) return MxAlert.error('이메일과 비밀번호를 입력하세요.');
+      try {
+        const body = { email, password };
+        if (hParam) body.advertiser_id = hParam;
+        const d = await api('POST', '/api/auth/customer-login', body);
+        if (d.resetRequired) { show('resetCard'); return; }
+        checkSession();
+      } catch (e) {
+        if (e.payload && e.payload.hospitals) {
+          MxAlert.error('해당 이메일이 여러 병원에 등록되어 있습니다. 예약 안내 메일의 링크로 접속하세요.');
+          return;
+        }
+        MxAlert.error(e.message);
+      }
+    }
+
+    async function resetPw() {
+      const current_password = document.getElementById('curPw').value;
+      const new_password = document.getElementById('newPw').value;
+      if (!current_password || !new_password) return MxAlert.error('비밀번호를 입력하세요.');
+      try {
+        await api('POST', '/api/auth/customer-reset-password', { current_password, new_password });
+        MxAlert.toast('비밀번호가 변경되었습니다.', 'success');
+        checkSession();
+      } catch (e) { MxAlert.error(e.message); }
+    }
+
+    async function loadList(user) {
+      show('listCard');
+      document.getElementById('custName').textContent = (user.name || '') + '님';
+      document.getElementById('custHospital').textContent = user.company_name || '';
+      try {
+        const d = await api('GET', '/api/schedule/my-appointments');
+        const box = document.getElementById('apptList');
+        if (!d.data.length) { box.innerHTML = '<div class="ms-empty">예약된 일정이 없습니다.</div>'; return; }
+        box.innerHTML = d.data.map(a => {
+          const date = a.start_at.slice(0, 10), st = a.start_at.slice(11, 16), et = a.end_at.slice(11, 16);
+          return `<div class="ms-appt ${a.status}">
+            <div class="t">${date} ${st} ~ ${et}<span class="ms-badge ${a.status}">${STATUS[a.status] || ''}</span></div>
+            <div class="meta">${a.hospital_name || ''} · 담당의사 ${a.doctor_name || ''}${a.specialty ? ' (' + a.specialty + ')' : ''}</div>
+          </div>`;
+        }).join('');
+      } catch (e) { document.getElementById('apptList').innerHTML = `<div class="ms-empty">${e.message}</div>`; }
+    }
+
+    document.getElementById('loginBtn').onclick = login;
+    document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+    document.getElementById('resetBtn').onclick = resetPw;
+    document.getElementById('logoutBtn').onclick = async () => { await fetch('/api/auth/logout', { method: 'POST' }); location.reload(); };
+    if (hParam) document.getElementById('loginHospital').textContent = '예약 안내 메일을 받으신 이메일로 로그인하세요.';
+
+    checkSession();
+  </script>
+</body>
+</html>

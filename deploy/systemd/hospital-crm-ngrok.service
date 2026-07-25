@@ -1,0 +1,20 @@
+[Unit]
+Description=Hospital CRM ngrok tunnel
+Wants=network-online.target
+Requires=hospital-crm-dev.service
+After=network-online.target hospital-crm-dev.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=arabwarrior
+Group=arabwarrior
+WorkingDirectory=/home/arabwarrior/hospital_crm
+EnvironmentFile=-/home/arabwarrior/hospital_crm/.env
+ExecStartPre=/usr/bin/bash -lc 'for i in {1..60}; do /usr/bin/curl -fsS "http://127.0.0.1:${PORT:-3030}/admin" >/dev/null && exit 0; sleep 2; done; echo "Hospital CRM dev server did not become ready in time" >&2; exit 1'
+ExecStart=/usr/local/bin/ngrok http --url=ad.ngrok.dev 3030
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

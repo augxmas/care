@@ -1,0 +1,20 @@
+[Unit]
+Description=Hospital CRM npm dev server
+Wants=network-online.target
+After=network-online.target mariadb.service mysql.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=arabwarrior
+Group=arabwarrior
+WorkingDirectory=/home/arabwarrior/hospital_crm
+Environment=NODE_ENV=development
+EnvironmentFile=-/home/arabwarrior/hospital_crm/.env
+ExecStartPre=/usr/bin/bash -lc 'for i in {1..60}; do /usr/bin/mysqladmin ping -h"${DB_HOST:-localhost}" -P"${DB_PORT:-3306}" --silent && exit 0; sleep 2; done; echo "MariaDB/MySQL did not become ready in time" >&2; exit 1'
+ExecStart=/usr/bin/npm run dev
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

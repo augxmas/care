@@ -1,0 +1,2 @@
+ALTER TABLE campaigns
+  ADD COLUMN IF NOT EXISTS discount_rate DECIMAL(5,2) NOT NULL DEFAULT 0 COMMENT '할인율(%)' AFTER description;

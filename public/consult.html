@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>온라인 1:1 상담</title>
+  <link rel="stylesheet" href="/css/common.css">
+  <style>
+    body { background: var(--gray-50, #f8fafc); }
+    .cs-wrap { max-width: 720px; margin: 36px auto; padding: 0 16px; }
+    .cs-card { background:#fff; border:1px solid var(--gray-200,#e5e7eb); border-radius:12px; padding:24px; margin-bottom:18px; }
+    .cs-head { text-align:center; margin-bottom:18px; }
+    .cs-head h1 { font-size:20px; color:var(--primary,#2563eb); margin:0 0 4px; }
+    .cs-head p { font-size:13px; color:var(--gray-500,#6b7280); margin:0; }
+    .cs-post { border:1px solid var(--gray-200,#e5e7eb); border-radius:8px; padding:12px 14px; margin-bottom:10px; cursor:pointer; }
+    .cs-post:hover { background:var(--gray-50,#f8fafc); }
+    .cs-post .t { font-weight:600; }
+    .cs-post .meta { font-size:12px; color:var(--gray-500,#6b7280); margin-top:3px; }
+    .cs-badge { font-size:11px; padding:2px 8px; border-radius:10px; background:#eff6ff; color:#1e40af; }
+    .cs-badge.answered { background:#dcfce7; color:#15803d; }
+    .cs-badge.closed { background:#f3f4f6; color:#6b7280; }
+    .hidden { display:none; }
+    .cs-row { display:flex; gap:8px; }
+    .answer-box { border-left:3px solid var(--primary,#2563eb); background:#f8fafc; border-radius:6px; padding:12px 14px; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="cs-wrap">
+    <div class="cs-head"><h1 id="hosName">온라인 1:1 상담</h1><p>비공개 상담 — 작성자 본인만 확인할 수 있습니다.</p></div>
+
+    <!-- 1) 본인확인 -->
+    <div class="cs-card" id="authCard">
+      <div class="form-group"><label class="form-label">이메일</label><input type="email" class="form-control" id="email" placeholder="이메일"></div>
+      <div class="form-group"><label class="form-label">인증코드 <span style="color:#2563eb">(비밀번호)</span></label><input type="text" class="form-control" id="code" placeholder="메일로 받은 6자리 코드" autocomplete="off"></div>
+      <p style="font-size:12.5px;color:#6b7280;line-height:1.55;margin:2px 0 6px">
+        이전에 받은 인증코드가 있으면 이메일과 함께 입력해 <strong>바로 진행</strong>하세요.
+        코드를 모르시면 <strong>인증코드 재발급</strong>을 받으시면 됩니다.
+        이 인증코드는 다음 접속·채팅 참여 시 <strong style="color:#2563eb">비밀번호로 사용</strong>되니 보관해 주세요.
+      </p>
+      <div class="cs-row" style="margin-top:8px">
+        <button class="btn btn-primary" id="verifyBtn" style="flex:1">상담 진행</button>
+        <button class="btn btn-ghost" id="sendBtn" style="flex:1">인증코드 재발급</button>
+      </div>
+    </div>
+
+    <!-- 2) 글 작성 -->
+    <div class="cs-card hidden" id="writeCard">
+      <h3 style="margin:0 0 12px">상담 요청 작성</h3>
+      <div class="form-group"><label class="form-label">제목</label><input type="text" class="form-control" id="pTitle"></div>
+      <div class="form-group"><label class="form-label">내용</label><textarea class="form-control" id="pBody" rows="5"></textarea></div>
+      <button class="btn btn-primary" id="createBtn" style="width:100%">상담 등록</button>
+    </div>
+
+    <!-- 3) 내 상담 목록 -->
+    <div class="cs-card hidden" id="listCard">
+      <h3 style="margin:0 0 12px">내 상담 내역</h3>
+      <div id="postList"></div>
+    </div>
+  </div>
+
+  <!-- 상세 모달 -->
+  <div class="overlay" id="detailOverlay">
+    <div class="overlay-dialog" style="max-width:560px;width:97%">
+      <div class="overlay-header"><span class="overlay-title">상담 상세</span><button class="overlay-close" id="detailClose">✕</button></div>
+      <div class="overlay-body" id="detailBody" style="padding:20px 22px"></div>
+    </div>
+  </div>
+
+  <script src="/js/alert.js"></script>
+  <script>
+    const H = new URLSearchParams(location.search).get('h');
+    let boardToken = null, myEmail = null;
+    const $ = id => document.getElementById(id);
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function csToast(message){
+      let c=document.getElementById('cs-toast-wrap');
+      if(!c){ c=document.createElement('div'); c.id='cs-toast-wrap';
+        c.style.cssText='position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:100000;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none';
+        document.body.appendChild(c); }
+      const t=document.createElement('div'); t.textContent=message;
+      t.style.cssText='background:#2563eb;color:#fff;font-weight:700;font-size:14px;text-align:center;padding:12px 28px;border-radius:8px;box-shadow:0 8px 24px rgba(37,99,235,.35);opacity:0;transform:translateY(-8px);transition:opacity .18s ease,transform .18s ease';
+      c.appendChild(t);
+      requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateY(0)'; });
+      setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-8px)'; setTimeout(()=>t.remove(),200); },2200);
+    }
+    async function api(method, path, body){
+      const r = await fetch(`/api/public/consult${path}${path.includes('?')?'&':'?'}h=${H}`, {
+        method, headers: body?{'Content-Type':'application/json'}:{}, body: body?JSON.stringify(body):undefined });
+      const d = await r.json().catch(()=>({})); if(!r.ok||!d.ok){ const e=new Error(d.error||'요청 실패'); e.data=d; throw e; } return d;
+    }
+    function openOv(id){ const e=$(id); e.style.display='flex'; setTimeout(()=>e.classList.add('visible'),10); }
+    function closeOv(id){ const e=$(id); e.classList.remove('visible'); setTimeout(()=>e.style.display='none',200); }
+    $('detailClose').onclick=()=>closeOv('detailOverlay');
+
+    (async ()=>{ if(!H){ document.body.innerHTML='<p style="text-align:center;margin-top:40px">잘못된 접근입니다.</p>'; return; }
+      try{ const m=await api('GET','/meta'); $('hosName').textContent=m.hospital_name+' 온라인 1:1 상담'; }catch{} })();
+
+    // 인증코드 재발급 — 새 코드를 메일로 발송(이전 코드는 무효)
+    $('sendBtn').onclick = async ()=>{
+      const email=$('email').value.trim(); if(!email) return MxAlert.error('이메일을 입력하세요.');
+      try{ await api('POST','/send-code',{email}); $('sendBtn').textContent='코드 재발급';
+        csToast('인증코드를 메일로 보냈습니다. 이 코드가 비밀번호입니다.'); $('code').focus(); }catch(e){ MxAlert.error(e.message); }
+    };
+    // 상담 진행 — 이메일 + 인증코드(비밀번호) 로그인
+    $('verifyBtn').onclick = async ()=>{
+      const email=$('email').value.trim(), code=$('code').value.trim();
+      if(!email||!code) return MxAlert.error('이메일과 인증코드를 입력하세요.');
+      try{ const d=await api('POST','/verify-code',{email,code}); boardToken=d.boardToken; myEmail=email;
+        $('authCard').classList.add('hidden'); $('writeCard').classList.remove('hidden'); $('listCard').classList.remove('hidden');
+        loadMyPosts(); }catch(e){ MxAlert.error(e.message); }
+    };
+    $('createBtn').onclick = async ()=>{
+      const title=$('pTitle').value.trim(), body=$('pBody').value.trim();
+      if(!title||!body) return MxAlert.error('제목과 내용을 입력하세요.');
+      try{ await api('POST','/posts',{boardToken,title,body}); csToast('상담이 등록되었습니다.');
+        $('pTitle').value='';$('pBody').value=''; loadMyPosts(); }catch(e){ MxAlert.error(e.message); }
+    };
+    async function loadMyPosts(){
+      try{ const d=await api('POST','/my-posts',{boardToken});
+        $('postList').innerHTML = d.data.length ? d.data.map(p=>`
+          <div class="cs-post" data-id="${p.id}">
+            <div class="t">${esc(p.title)} <span class="cs-badge ${p.status}">${({new:'접수',assigned:'배정',answered:'답변완료',closed:'종결'})[p.status]||p.status}</span></div>
+            <div class="meta">${p.created_at} · 답변 ${p.answer_count}건</div>
+          </div>`).join('') : '<p style="color:#9ca3af;font-size:13px">등록한 상담이 없습니다.</p>';
+        $('postList').querySelectorAll('.cs-post').forEach(el=>el.onclick=()=>openDetail(+el.dataset.id));
+      }catch(e){ MxAlert.error(e.message); }
+    }
+    async function openDetail(id){
+      // 본인확인: 로그인(board) 토큰으로 view 토큰 발급
+      let viewToken;
+      try{ const a=await api('POST',`/posts/${id}/auth`,{boardToken}); viewToken=a.viewToken; }
+      catch(e){ return MxAlert.error(e.message); }
+      try{
+        const d=await api('GET',`/posts/${id}?token=${encodeURIComponent(viewToken)}`);
+        const p=d.post;
+        let html=`<div style="font-weight:700;font-size:16px">${esc(p.title)}</div>
+          <div style="font-size:12px;color:#6b7280;margin:4px 0 12px">${p.created_at}</div>
+          <div style="white-space:pre-wrap;line-height:1.5">${esc(p.body)}</div>`;
+        if(d.answers.length){ html+='<div style="font-weight:700;margin:16px 0 6px">답변</div>';
+          d.answers.forEach(a=>{ html+=`<div class="answer-box"><div style="font-size:12px;color:#6b7280">${a.author_type==='doctor'?'의사':'담당자'} ${esc(a.author_name||'')} · ${a.created_at}</div>
+            <div style="white-space:pre-wrap;margin-top:4px">${esc(a.body)}</div>
+            ${a.chat_link_token?`<a class="btn btn-primary btn-sm" style="margin-top:8px;display:inline-block" href="/consult-chat?h=${H}&p=${id}&t=${a.chat_link_token}">💬 채팅 시작</a>`:''}</div>`; });
+        }
+        html+=`<div class="cs-row" style="margin-top:16px">
+          <button class="btn btn-ghost btn-sm" id="editBtn">수정</button>
+          <button class="btn btn-danger btn-sm" id="delBtn">삭제</button></div>`;
+        $('detailBody').innerHTML=html; openOv('detailOverlay');
+        $('editBtn').onclick=async ()=>{
+          const nt=await MxAlert.prompt('새 제목', {defaultValue:p.title}); if(nt==null) return;
+          const nb=await MxAlert.prompt('새 내용', {defaultValue:p.body}); if(nb==null) return;
+          try{ await api('PUT',`/posts/${id}`,{boardToken,title:nt,body:nb}); csToast('수정되었습니다.'); closeOv('detailOverlay'); loadMyPosts(); }catch(e){ MxAlert.error(e.message); } };
+        $('delBtn').onclick=async ()=>{ const ok=await MxAlert.confirm('이 상담을 삭제하시겠습니까?'); if(!ok) return;
+          try{ await api('DELETE',`/posts/${id}`,{boardToken}); csToast('삭제되었습니다.'); closeOv('detailOverlay'); loadMyPosts(); }catch(e){ MxAlert.error(e.message); } };
+      }catch(e){ MxAlert.error(e.message); }
+    }
+  </script>
+</body>
+</html>

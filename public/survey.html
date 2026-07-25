@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>사전 문진</title>
+  <link rel="stylesheet" href="/css/common.css">
+  <script src="/js/alert.js"></script>
+  <style>
+    body { background: #f3f4f6; }
+    .sf-wrap { max-width: 720px; margin: 0 auto; padding: 16px; }
+    .sf-card {
+      background: #fff; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07);
+      border: 1px solid var(--gray-200); overflow: hidden; margin-bottom: 16px;
+    }
+    .sf-banner img { display: block; width: 100%; height: 200px; object-fit: cover; }
+    .sf-body { padding: 24px; }
+    .sf-title {
+      font-size: 24px; font-weight: 800; color: var(--gray-900);
+      border-bottom: 2px solid var(--primary); padding-bottom: 12px; margin-bottom: 12px;
+    }
+    .sf-cats { margin-bottom: 16px; }
+    .sf-cats span {
+      display: inline-block; padding: 3px 10px; background: #eef2ff; color: #4f46e5;
+      border-radius: 12px; font-size: 12px; margin: 2px 3px;
+    }
+    .sf-step { display: none; }
+    .sf-step.active { display: block; }
+    .sf-step-title {
+      font-size: 16px; font-weight: 700; color: var(--gray-800); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sf-step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; background: var(--primary); color: #fff;
+      border-radius: 50%; font-size: 13px; font-weight: 700;
+    }
+    .sf-consent-text {
+      background: #f9fafb; border: 1px solid var(--gray-200); border-radius: 6px;
+      padding: 12px; font-size: 12px; color: var(--gray-700); white-space: pre-wrap;
+      max-height: 160px; overflow-y: auto; margin-bottom: 8px;
+    }
+    .sf-existing-note {
+      background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46;
+      padding: 10px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 14px;
+    }
+    .sf-q {
+      margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--gray-100);
+    }
+    .sf-q:last-child { border-bottom: none; }
+    .sf-q-text { font-weight: 600; color: var(--gray-800); margin-bottom: 8px; }
+    .sf-q-req { color: #ef4444; margin-left: 3px; }
+    .sf-q-opt label {
+      display: block; padding: 8px 12px; margin: 4px 0;
+      background: #fff; border: 1.5px solid var(--gray-300); border-radius: 6px;
+      cursor: pointer; font-size: 14px;
+    }
+    .sf-q-opt label:has(input:checked) {
+      background: #eef2ff; border-color: var(--primary); color: var(--primary); font-weight: 600;
+    }
+    .sf-q-opt input { margin-right: 8px; accent-color: var(--primary); }
+    .sf-actions {
+      display: flex; gap: 8px; justify-content: center; padding: 16px 24px;
+      border-top: 1px solid var(--gray-200); background: #fafafa;
+    }
+    .sf-prefilled { background: #f0fdf4 !important; border-color: #86efac !important; }
+    .sf-prefilled-label::after { content: ' ✓ 등록된 정보'; color: #16a34a; font-size: 11px; font-weight: 600; }
+    .sf-done {
+      text-align: center; padding: 60px 20px;
+    }
+    .sf-done .icon { font-size: 64px; margin-bottom: 16px; }
+    .sf-done h2 { font-size: 22px; color: var(--gray-800); margin-bottom: 8px; }
+    .sf-done p { color: var(--gray-500); }
+  </style>
+</head>
+<body>
+<div class="sf-wrap">
+  <div id="sfLoading" style="text-align:center;padding:60px"><div class="spinner"></div></div>
+
+  <div class="sf-card" id="sfMain" style="display:none">
+    <div class="sf-banner"><img id="sfImage" src="/assets/survey-default.svg" alt=""></div>
+    <div class="sf-body">
+      <div class="sf-title" id="sfTitle"></div>
+      <div class="sf-cats" id="sfCats"></div>
+
+      <!-- Step 1: 동의 -->
+      <div class="sf-step" id="sfStepConsent">
+        <div class="sf-step-title"><span class="sf-step-num">1</span>이용약관 및 개인정보 동의</div>
+        <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px">이용약관</div>
+        <div class="sf-consent-text" id="sfTermsText"></div>
+        <label class="form-check" style="margin-bottom:14px">
+          <input type="checkbox" id="sfTermsAgree"> <span>이용약관에 동의합니다 (필수)</span>
+        </label>
+        <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px">개인정보 수집·이용</div>
+        <div class="sf-consent-text" id="sfPrivacyText"></div>
+        <label class="form-check" style="margin-bottom:14px">
+          <input type="checkbox" id="sfPrivacyAgree"> <span>개인정보 수집·이용에 동의합니다 (필수)</span>
+        </label>
+      </div>
+
+      <!-- Step 2: 이메일 인증 -->
+      <div class="sf-step" id="sfStepEmail">
+        <div class="sf-step-title"><span class="sf-step-num">2</span>이메일 본인확인</div>
+        <div class="form-group">
+          <label class="form-label">이메일 <span class="required">*</span></label>
+          <div style="display:flex;gap:6px">
+            <input class="form-control" type="email" id="sfEmail" placeholder="example@email.com">
+            <button class="btn btn-primary" id="sfSendCodeBtn">코드 발송</button>
+          </div>
+          <div id="sfEmailMsg" style="font-size:12px;color:var(--gray-500);margin-top:6px"></div>
+        </div>
+        <div class="form-group" id="sfCodeGroup" style="display:none">
+          <label class="form-label">인증코드 (6자리) <span class="required">*</span></label>
+          <div style="display:flex;gap:6px">
+            <input class="form-control" type="text" id="sfCode" maxlength="6" inputmode="numeric" placeholder="000000">
+            <button class="btn btn-primary" id="sfVerifyBtn">확인</button>
+          </div>
+          <div id="sfCodeMsg" style="font-size:12px;color:var(--gray-500);margin-top:6px"></div>
+        </div>
+      </div>
+
+      <!-- Step 3: 개인정보 입력 -->
+      <div class="sf-step" id="sfStepPersonal">
+        <div class="sf-step-title"><span class="sf-step-num">3</span>개인정보 입력</div>
+        <div class="sf-existing-note" id="sfExistingNote" style="display:none">
+          ✓ 이전에 등록된 회원입니다. 누락된 항목만 추가로 입력해 주세요.
+        </div>
+        <div id="sfPersonalFields"></div>
+      </div>
+
+      <!-- Step 4: 문진 답변 -->
+      <div class="sf-step" id="sfStepQuestions">
+        <div class="sf-step-title"><span class="sf-step-num" id="sfQStepNum">4</span>문진 답변</div>
+        <div id="sfQuestions"></div>
+      </div>
+
+      <!-- 완료 -->
+      <div class="sf-step" id="sfStepDone">
+        <div class="sf-done">
+          <div class="icon">✅</div>
+          <h2>제출이 완료되었습니다</h2>
+          <p>소중한 답변 감사합니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sf-actions" id="sfActions">
+      <button class="btn btn-ghost" id="sfPrevBtn" style="display:none">이전</button>
+      <button class="btn btn-primary" id="sfNextBtn">다음</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SV_FIELDS_LABELS = {
+  name: '이름', pronunciation_ko: '한글 발음', mobile: '모바일', phone: '전화번호',
+  birth_ymd: '생년월일', gender: '성별', nationality: '국적', address: '주소',
+  postal_code: '우편번호', job: '직업', company: '직장', sns: 'SNS',
+};
+const DEFAULT_TERMS = '제 1조 (목적) 본 약관은 본인이 작성하는 사전 문진의 내용 및 제공한 정보가 진료/상담 목적에 한해 사용됨에 동의하는 것을 목적으로 합니다.\n\n제 2조 (수집 정보의 이용) 입력하신 정보는 의료 상담 및 진료 준비 목적으로만 사용되며, 본인의 동의 없이 제3자에게 제공되지 않습니다.';
+const DEFAULT_PRIVACY = '1. 수집 항목: 본 문진에서 선택한 항목에 한합니다.\n2. 보유 기간: 진료 종료 후 의료법에 따른 보존 기간\n3. 거부 권리: 동의를 거부할 수 있으며, 거부 시 문진 작성이 제한될 수 있습니다.';
+
+const SURVEY_ID = location.pathname.split('/').pop();
+let survey       = null;
+let stepIndex    = 0;
+let steps        = [];   // ['consent','email','personal','questions']
+let verifiedEmail = null;
+let visitId      = null;
+let existingData = {};
+
+function parseQuestionCSV(q) {
+  const parts = String(q.text || '').split(',').map(s => s.trim());
+  const text     = parts[0] || '';
+  const required = /필수|required/i.test(parts[1] || '');
+  let choiceMode = 'single', maxLength = 0;
+  if (q.type === 'objective') {
+    const mode = (parts[2] || '').toLowerCase();
+    if (/멀티|multi/.test(mode)) choiceMode = 'multi';
+  } else {
+    const n = parseInt(parts[2] || '0');
+    if (!isNaN(n) && n > 0) maxLength = n;
+  }
+  return { text, required, choiceMode, maxLength };
+}
+
+function parseQOptions(rawText) {
+  if (!rawText) return [];
+  return String(rawText).split('\n').map(s => s.trim()).filter(Boolean).map(line => {
+    const idx = line.indexOf(',');
+    if (idx < 0) return { label: line, value: line };
+    return { label: line.slice(0, idx).trim(), value: (line.slice(idx + 1).trim() || line.slice(0, idx).trim()) };
+  }).filter(o => o.label);
+}
+function getQOptions(q) {
+  const parsed = parseQOptions(q && q.options);
+  if (parsed.length) return parsed;
+  return [{ label: '예', value: '예' }, { label: '아니오', value: '아니오' }];
+}
+function getQAnswer(idx) {
+  const div = document.querySelector(`#sfQuestions .sf-q[data-idx="${idx}"]`);
+  if (!div) return null;
+  const type = div.dataset.type;
+  if (type === 'objective') {
+    const checked = [...div.querySelectorAll('input[type=radio]:checked, input[type=checkbox]:checked')];
+    if (!checked.length) return null;
+    return checked.length === 1 ? checked[0].value : checked.map(c => c.value);
+  }
+  const v = (div.querySelector('textarea').value || '').trim();
+  return v || null;
+}
+function isConditionMet(cond) {
+  if (!cond || cond.qIdx == null) return true;
+  const triggers = cond.values || [];
+  if (!triggers.length) return false;
+  const a = getQAnswer(cond.qIdx);
+  if (a === null) return false;
+  const arr = Array.isArray(a) ? a : [a];
+  return triggers.some(t => arr.includes(t));
+}
+function updateQVisibility() {
+  document.querySelectorAll('#sfQuestions .sf-q').forEach(div => {
+    const idx = parseInt(div.dataset.idx);
+    const q = survey.questions[idx];
+    const visible = isConditionMet(q && q.precondition);
+    div.style.display = visible ? '' : 'none';
+  });
+}
+
+async function loadSurvey() {
+  try {
+    const r = await fetch(`/api/public/surveys/${SURVEY_ID}`).then(r => r.json());
+    if (!r.ok) {
+      document.getElementById('sfLoading').innerHTML = `<div class="no-data"><span class="icon">📭</span>${r.error || '문진을 찾을 수 없습니다.'}</div>`;
+      return;
+    }
+    survey = r.survey;
+    initFlow();
+  } catch (e) {
+    document.getElementById('sfLoading').innerHTML = `<div class="no-data"><span class="icon">⚠️</span>네트워크 오류가 발생했습니다.</div>`;
+  }
+}
+
+function initFlow() {
+  document.getElementById('sfLoading').style.display = 'none';
+  document.getElementById('sfMain').style.display = '';
+  document.getElementById('sfImage').src = survey.image_path || '/assets/survey-default.svg';
+  document.getElementById('sfTitle').textContent = survey.title;
+  document.getElementById('sfCats').innerHTML = survey.categories.map(c => `<span>${c}</span>`).join('');
+
+  if (survey.collects_personal_info) {
+    document.getElementById('sfTermsText').textContent   = survey.terms_text   || DEFAULT_TERMS;
+    document.getElementById('sfPrivacyText').textContent = survey.privacy_text || DEFAULT_PRIVACY;
+    steps = ['consent', 'email', 'personal', 'questions'];
+    document.getElementById('sfQStepNum').textContent = '4';
+  } else {
+    steps = ['questions'];
+    document.getElementById('sfQStepNum').textContent = '1';
+  }
+  renderQuestions();
+  showStep(0);
+}
+
+function showStep(idx) {
+  stepIndex = idx;
+  ['Consent','Email','Personal','Questions','Done'].forEach(s => {
+    document.getElementById('sfStep' + s).classList.remove('active');
+  });
+  const stepName = steps[idx];
+  if (!stepName) {  // 완료
+    document.getElementById('sfStepDone').classList.add('active');
+    document.getElementById('sfActions').style.display = 'none';
+    return;
+  }
+  const map = { consent: 'Consent', email: 'Email', personal: 'Personal', questions: 'Questions' };
+  document.getElementById('sfStep' + map[stepName]).classList.add('active');
+  document.getElementById('sfPrevBtn').style.display = idx > 0 ? '' : 'none';
+  document.getElementById('sfNextBtn').textContent = (stepName === 'questions') ? '제출' : '다음';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderQuestions() {
+  const box = document.getElementById('sfQuestions');
+  box.innerHTML = '';
+  survey.questions.forEach((q, i) => {
+    const p = parseQuestionCSV(q);
+    const div = document.createElement('div');
+    div.className = 'sf-q';
+    div.dataset.idx = i;
+    div.dataset.required = p.required ? '1' : '0';
+    div.dataset.type = q.type;
+    let html = `<div class="sf-q-text">${i+1}. ${p.text}${p.required ? '<span class="sf-q-req">*</span>' : ''}</div>`;
+    if (q.type === 'objective') {
+      const inputType = p.choiceMode === 'multi' ? 'checkbox' : 'radio';
+      const opts = getQOptions(q);
+      html += `<div class="sf-q-opt">` +
+        opts.map(o => `<label><input type="${inputType}" name="q_${i}" value="${(o.value||'').replace(/"/g,'&quot;')}"> ${o.label}</label>`).join('') +
+        `</div>`;
+    } else {
+      const ml = p.maxLength > 0 ? ` maxlength="${p.maxLength}"` : '';
+      html += `<textarea class="form-control" name="q_${i}" rows="3" placeholder="답변을 입력하세요"${ml}></textarea>`;
+      if (p.maxLength > 0) html += `<div style="text-align:right;font-size:11px;color:var(--gray-400);margin-top:4px"><span class="sfc">0</span> / ${p.maxLength}자</div>`;
+    }
+    div.innerHTML = html;
+    box.appendChild(div);
+    const ta = div.querySelector('textarea');
+    const counter = div.querySelector('.sfc');
+    if (ta && counter) ta.addEventListener('input', () => counter.textContent = ta.value.length);
+    // 답변 변경 시 다른 질문의 조건 재평가
+    div.querySelectorAll('input, textarea').forEach(el => {
+      el.addEventListener('change', updateQVisibility);
+      if (el.tagName === 'TEXTAREA') el.addEventListener('input', updateQVisibility);
+    });
+  });
+  updateQVisibility();
+}
+
+function renderPersonalFields() {
+  const box = document.getElementById('sfPersonalFields');
+  box.innerHTML = '';
+  const fields = survey.personal_fields || [];
+  fields.forEach(k => {
+    const lab = SV_FIELDS_LABELS[k] || k;
+    const v = existingData[k] || '';
+    const prefilled = !!v;
+    const div = document.createElement('div');
+    div.className = 'form-group';
+    div.innerHTML = `
+      <label class="form-label ${prefilled ? 'sf-prefilled-label' : ''}">${lab}</label>
+      <input class="form-control ${prefilled ? 'sf-prefilled' : ''}" type="text"
+             name="pi_${k}" value="${v.replace(/"/g,'&quot;')}" placeholder="${lab}">
+    `;
+    box.appendChild(div);
+  });
+}
+
+// 이벤트 바인딩
+document.getElementById('sfSendCodeBtn').addEventListener('click', async () => {
+  const email = document.getElementById('sfEmail').value.trim();
+  const msg = document.getElementById('sfEmailMsg');
+  if (!email) { msg.textContent = '이메일을 입력해주세요.'; msg.style.color = '#ef4444'; return; }
+  msg.textContent = '발송 중…'; msg.style.color = 'var(--gray-500)';
+  try {
+    const r = await fetch(`/api/public/surveys/${SURVEY_ID}/send-code`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email }),
+    }).then(r => r.json());
+    if (!r.ok) throw new Error(r.error || '발송 실패');
+    msg.textContent = '✓ 인증코드가 발송되었습니다. (10분 유효)';
+    msg.style.color = '#16a34a';
+    document.getElementById('sfCodeGroup').style.display = '';
+    document.getElementById('sfCode').focus();
+  } catch (e) {
+    msg.textContent = e.message; msg.style.color = '#ef4444';
+  }
+});
+
+document.getElementById('sfVerifyBtn').addEventListener('click', async () => {
+  const email = document.getElementById('sfEmail').value.trim();
+  const code  = document.getElementById('sfCode').value.trim();
+  const msg = document.getElementById('sfCodeMsg');
+  if (!code) { msg.textContent = '인증코드를 입력해주세요.'; msg.style.color = '#ef4444'; return; }
+  msg.textContent = '확인 중…'; msg.style.color = 'var(--gray-500)';
+  try {
+    const r = await fetch(`/api/public/surveys/${SURVEY_ID}/verify-code`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, code }),
+    }).then(r => r.json());
+    if (!r.ok) throw new Error(r.error || '확인 실패');
+    verifiedEmail = email;
+    visitId       = r.visitId;
+    existingData  = r.existing || {};
+    msg.textContent = '✓ 본인확인이 완료되었습니다.'; msg.style.color = '#16a34a';
+    document.getElementById('sfExistingNote').style.display = r.isExisting ? '' : 'none';
+    renderPersonalFields();
+    setTimeout(() => showStep(stepIndex + 1), 500);
+  } catch (e) {
+    msg.textContent = e.message; msg.style.color = '#ef4444';
+  }
+});
+
+document.getElementById('sfPrevBtn').addEventListener('click', () => {
+  if (stepIndex > 0) showStep(stepIndex - 1);
+});
+
+document.getElementById('sfNextBtn').addEventListener('click', async () => {
+  const cur = steps[stepIndex];
+  if (cur === 'consent') {
+    if (!document.getElementById('sfTermsAgree').checked || !document.getElementById('sfPrivacyAgree').checked) {
+      return MxAlert.error('두 항목 모두 동의가 필요합니다.');
+    }
+    showStep(stepIndex + 1);
+  } else if (cur === 'email') {
+    if (!verifiedEmail) return MxAlert.error('이메일 본인확인을 완료해주세요.');
+    showStep(stepIndex + 1);
+  } else if (cur === 'personal') {
+    showStep(stepIndex + 1);
+  } else if (cur === 'questions') {
+    submitSurvey();
+  }
+});
+
+async function submitSurvey() {
+  // 필수 질문 검증
+  const answers = [];
+  const qDivs = document.querySelectorAll('#sfQuestions .sf-q');
+  for (const div of qDivs) {
+    if (div.style.display === 'none') continue;  // 조건 미충족 → 제외
+    const idx = parseInt(div.dataset.idx);
+    const required = div.dataset.required === '1';
+    const type = div.dataset.type;
+    let value = '';
+    if (type === 'objective') {
+      const inputs = div.querySelectorAll('input[type=radio]:checked, input[type=checkbox]:checked');
+      value = [...inputs].map(i => i.value);
+      if (Array.isArray(value) && value.length === 1) value = value[0];
+      else if (Array.isArray(value) && !value.length) value = '';
+    } else {
+      value = div.querySelector('textarea').value.trim();
+    }
+    if (required && (!value || (Array.isArray(value) && !value.length))) {
+      return MxAlert.error(`${idx+1}번 질문은 필수입니다.`);
+    }
+    answers.push({ idx, text: parseQuestionCSV(survey.questions[idx]).text, type, answer: value });
+  }
+  // 개인정보 수집
+  const personal = {};
+  if (survey.collects_personal_info) {
+    document.querySelectorAll('#sfPersonalFields input').forEach(inp => {
+      const k = inp.name.replace(/^pi_/, '');
+      const v = inp.value.trim();
+      if (v) personal[k] = v;
+    });
+  }
+  const payload = {
+    email: verifiedEmail || null,
+    visitId, personal, answers,
+  };
+  try {
+    const r = await fetch(`/api/public/surveys/${SURVEY_ID}/submit`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    }).then(r => r.json());
+    if (!r.ok) return MxAlert.error(r.error || '제출 실패');
+    showStep(steps.length);  // → Done
+  } catch (e) {
+    MxAlert.error('제출 중 오류가 발생했습니다.');
+  }
+}
+
+loadSurvey();
+</script>
+</body>
+</html>

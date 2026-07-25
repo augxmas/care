@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>캠페인 이미지</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/common.css">
+  <style>
+    body { margin:0; background:#f5f7fb; min-height:100vh; }
+    .ci-shell { width:min(94vw, 760px); margin:36px auto; }
+    .ci-panel { background:#fff; border:1px solid var(--gray-200); border-radius:8px; overflow:hidden; box-shadow:0 2px 10px rgba(15,23,42,.08); }
+    .ci-head { padding:20px 24px; background:#2563eb; color:#fff; text-align:center; }
+    .ci-head h1 { margin:0; font-size:22px; letter-spacing:0; }
+    .ci-head p { margin:8px 0 0; color:#dbeafe; font-size:14px; line-height:1.55; }
+    .ci-body { padding:20px; text-align:center; }
+    .ci-image-link { display:block; cursor:pointer; border-radius:8px; overflow:hidden; border:1px solid var(--gray-200); background:#f9fafb; }
+    .ci-image { display:block; width:100%; height:auto; }
+    .ci-hint { margin-top:12px; font-size:13px; color:var(--gray-500); }
+    .ci-empty { padding:48px 20px; text-align:center; color:var(--gray-500); }
+    @media (max-width:640px) {
+      .ci-shell { margin:16px auto; }
+      .ci-head, .ci-body { padding:18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="ci-shell">
+    <section class="ci-panel">
+      <div class="ci-head">
+        <h1 id="ciTitle">캠페인 이미지</h1>
+        <p id="ciDesc"></p>
+      </div>
+      <div class="ci-body" id="ciBody">
+        <div class="ci-empty">이미지를 불러오는 중입니다.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const campaignId = params.get('id') || location.pathname.split('/').filter(Boolean).pop();
+    const body = document.getElementById('ciBody');
+
+    function esc(v) {
+      return String(v || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    }
+
+    async function loadCampaignImage() {
+      try {
+        const res = await fetch(`/api/campaigns/image-page/${encodeURIComponent(campaignId)}`);
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || '이미지를 불러오지 못했습니다.');
+        const c = data.data;
+        document.getElementById('ciTitle').textContent = c.campaign_name || '캠페인 이미지';
+        document.getElementById('ciDesc').textContent = c.description || '';
+        body.innerHTML = `
+          <a class="ci-image-link" href="${esc(c.form_url)}" title="수집 폼 작성하기">
+            <img class="ci-image" src="${esc(c.image_url)}" alt="${esc(c.campaign_name || '캠페인 이미지')}">
+          </a>
+          <div class="ci-hint">이미지를 클릭하면 수집 폼으로 이동합니다.</div>
+        `;
+      } catch (err) {
+        body.innerHTML = `<div class="ci-empty">${esc(err.message || '이미지를 불러오지 못했습니다.')}</div>`;
+      }
+    }
+
+    loadCampaignImage();
+  </script>
+</body>
+</html>

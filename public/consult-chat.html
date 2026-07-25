@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상담 채팅</title>
+  <link rel="stylesheet" href="/css/common.css">
+  <style>
+    body { background:var(--gray-50,#f8fafc); }
+    .ch-wrap { max-width:680px; margin:24px auto; padding:0 12px; }
+    .ch-card { background:#fff; border:1px solid var(--gray-200,#e5e7eb); border-radius:12px; padding:22px; }
+    .ch-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .ch-msgs { height:55vh; overflow-y:auto; border:1px solid var(--gray-200,#e5e7eb); border-radius:8px; padding:12px; background:#fafafa; }
+    .ch-msg { margin-bottom:10px; display:flex; }
+    .ch-msg.me { justify-content:flex-end; }
+    .ch-bubble { max-width:75%; padding:8px 12px; border-radius:12px; background:#fff; border:1px solid var(--gray-200,#e5e7eb); font-size:14px; }
+    .ch-msg.me .ch-bubble { background:#2563eb; color:#fff; }
+    .ch-orig { font-size:11px; opacity:.7; margin-top:4px; border-top:1px dashed rgba(0,0,0,.15); padding-top:3px; }
+    .ch-msg.me .ch-orig { border-top-color:rgba(255,255,255,.3); }
+    .ch-att a { color:inherit; text-decoration:underline; font-size:13px; }
+    .ch-drop { border:2px dashed var(--gray-300,#cbd5e1); border-radius:8px; text-align:center; color:#9ca3af; font-size:12px; padding:6px; margin-top:8px; }
+    .ch-drop.over { border-color:var(--primary,#2563eb); background:#eff6ff; color:#2563eb; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <div class="ch-wrap">
+    <!-- 본인확인 -->
+    <div class="ch-card" id="authCard">
+      <h3 id="hosTitle" style="margin:0 0 6px">상담 채팅</h3>
+      <p style="font-size:13px;color:#6b7280;margin:0 0 14px">채팅 참여를 위해 <strong>이메일과 인증코드(비밀번호)</strong>로 본인확인이 필요합니다. 이전에 받은 코드가 있으면 바로 입장하시고, 모르시면 재발급 받으세요.</p>
+      <div class="form-group"><label class="form-label">이메일</label><input type="email" class="form-control" id="email"></div>
+      <div class="form-group"><label class="form-label">인증코드 <span style="color:#2563eb">(비밀번호)</span></label>
+        <div style="position:relative">
+          <input type="password" class="form-control" id="code" placeholder="메일로 받은 6자리 코드" autocomplete="off" style="padding-right:40px">
+          <button type="button" id="codeToggle" title="코드 표시/숨기기" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#6b7280;padding:4px">👁</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" id="joinBtn" style="flex:1">입장</button>
+        <button class="btn btn-ghost" id="sendBtn" style="flex:1">인증코드 재발급</button>
+      </div>
+    </div>
+
+    <!-- 번역 언어 선택 (미등록 고객) -->
+    <div class="ch-card hidden" id="langCard">
+      <h3 style="margin:0 0 6px">상담을 위해 번역이 필요하신가요?</h3>
+      <p style="font-size:13px;color:#6b7280;margin:0 0 14px">상담 담당자와 사용하는 언어가 다르다면, 메시지를 자동으로 번역해 드립니다.</p>
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <button class="btn btn-primary" id="needYes" style="flex:1">예, 번역이 필요해요</button>
+        <button class="btn btn-ghost" id="needNo" style="flex:1">아니요, 필요 없어요</button>
+      </div>
+      <div id="langSelectWrap" style="display:none;margin-top:12px">
+        <div class="form-group"><label class="form-label">사용 언어를 선택하세요</label>
+          <select class="form-control" id="langSel"></select></div>
+        <div class="form-group" id="otherWrap" style="display:none"><label class="form-label">언어 선택 (기타)</label>
+          <select class="form-control" id="otherSel"></select></div>
+        <button class="btn btn-primary" id="langConfirm" style="width:100%">채팅 시작</button>
+      </div>
+    </div>
+
+    <!-- 채팅 -->
+    <div class="ch-card hidden" id="chatCard">
+      <div class="ch-head">
+        <div style="font-weight:700" id="chatTitle">상담 채팅</div>
+        <div style="font-size:12px;color:#6b7280;display:flex;gap:10px;align-items:center">
+          <label style="display:flex;gap:4px;align-items:center"><input type="radio" name="translateMode" value="both" checked> 원문+번역</label>
+          <label style="display:flex;gap:4px;align-items:center"><input type="radio" name="translateMode" value="translated"> 번역</label>
+        </div>
+      </div>
+      <div class="ch-msgs" id="msgs"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input type="text" class="form-control" id="msgInput" placeholder="메시지 입력" style="flex:1">
+        <button class="btn btn-primary" id="sendMsgBtn">전송</button>
+      </div>
+      <div class="ch-drop" id="dropZone">📎 파일을 여기로 드래그하거나 클릭하여 첨부 (이미지·PDF·문서, txt 계열 불가)</div>
+      <input type="file" id="fileInput" class="hidden">
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/alert.js"></script>
+  <script>
+    const P = new URLSearchParams(location.search);
+    const H = P.get('h'), POST = P.get('p'), T = P.get('t');
+    const $ = id => document.getElementById(id);
+    let chatToken=null, convId=null, socket=null, showBoth=true;
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    // 첨부 렌더 — 이미지는 인라인 썸네일(클릭 시 원본), 그 외는 링크
+    function attachHtml(att){
+      const url = att.path && att.path.charAt(0)==='/' ? att.path : '/'+(att.path||'');
+      const isImg = /^image\//i.test(att.mime||'') || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(att.name||'');
+      if(isImg) return `<a href="${esc(url)}" target="_blank" style="display:block"><img src="${esc(url)}" alt="${esc(att.name||'')}" style="max-width:100%;width:auto;height:auto;max-height:260px;border-radius:8px;display:block;cursor:zoom-in"></a>`;
+      return `📎 <a href="${esc(url)}" target="_blank">${esc(att.name||'첨부파일')}</a>`;
+    }
+    function chFmtTime(ts){ if(!ts) return ''; let s=String(ts).replace('T',' ').replace('Z','').replace(/\.\d+/,'').trim().slice(0,19); if(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(s)) s+=':00'; return s; }
+    function csToast(message){
+      let c=document.getElementById('cs-toast-wrap');
+      if(!c){ c=document.createElement('div'); c.id='cs-toast-wrap';
+        c.style.cssText='position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:100000;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none';
+        document.body.appendChild(c); }
+      const t=document.createElement('div'); t.textContent=message;
+      t.style.cssText='background:#2563eb;color:#fff;font-weight:700;font-size:14px;text-align:center;padding:12px 28px;border-radius:8px;box-shadow:0 8px 24px rgba(37,99,235,.35);opacity:0;transform:translateY(-8px);transition:opacity .18s ease,transform .18s ease';
+      c.appendChild(t);
+      requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateY(0)'; });
+      setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-8px)'; setTimeout(()=>t.remove(),200); },2200);
+    }
+    async function api(method, path, body){
+      const r=await fetch(`/api/public/consult${path}${path.includes('?')?'&':'?'}h=${H}`,{method,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+      const d=await r.json().catch(()=>({})); if(!r.ok||!d.ok) throw new Error(d.error||'요청 실패'); return d;
+    }
+    (async()=>{ try{ const m=await api('GET',`/chat/meta?p=${POST}`); $('hosTitle').textContent=m.hospital_name+' 상담 채팅'; $('chatTitle').textContent=esc(m.title||'상담 채팅'); }catch{} })();
+
+    $('codeToggle').onclick=function(){ const c=$('code'); c.type=c.type==='password'?'text':'password'; this.textContent=c.type==='password'?'👁':'🙈'; };
+    $('sendBtn').onclick=async()=>{ const email=$('email').value.trim(); if(!email) return MxAlert.error('이메일을 입력하세요.');
+      try{ await api('POST','/send-code',{email}); $('sendBtn').textContent='코드 재발급'; csToast('인증코드를 메일로 보냈습니다. 이 코드가 비밀번호입니다.'); $('code').focus(); }catch(e){ MxAlert.error(e.message); } };
+    $('joinBtn').onclick=async()=>{ const email=$('email').value.trim(), code=$('code').value.trim();
+      if(!email||!code) return MxAlert.error('이메일과 인증코드를 입력하세요.');
+      try{ const d=await api('POST','/chat/join',{email,code,p:POST}); chatToken=d.chatToken; convId=d.conversationId;
+        $('authCard').classList.add('hidden');
+        if(d.knownCustomer){ enterChat(); }       // 등록 고객 → 국적 언어 자동 적용
+        else { await showLangStep(); }             // 미등록 고객 → 번역 언어 선택
+      }catch(e){ MxAlert.error(e.message); } };
+
+    // ── 번역 언어 선택 (미등록 고객) ──────────────────────────
+    async function showLangStep(){
+      $('langCard').classList.remove('hidden');
+      try{
+        const o=await api('GET','/chat/lang-options');
+        const sel=$('langSel'); sel.innerHTML='';
+        (o.fromCustomers||[]).forEach(l=>{ const op=document.createElement('option'); op.value=l.code; op.textContent=l.label; sel.appendChild(op); });
+        const etc=document.createElement('option'); etc.value='other'; etc.textContent='기타 (목록에 없는 언어)'; sel.appendChild(etc);
+        const os=$('otherSel'); os.innerHTML='';
+        (o.all||[]).forEach(l=>{ const op=document.createElement('option'); op.value=l.code; op.textContent=l.label; os.appendChild(op); });
+        sel.onchange=()=>{ $('otherWrap').style.display = sel.value==='other' ? 'block' : 'none'; };
+        sel.onchange();
+      }catch(e){ /* 옵션 로드 실패해도 기타 선택 가능 */ }
+    }
+    $('needYes').onclick=()=>{ $('langSelectWrap').style.display='block'; };
+    $('needNo').onclick=async()=>{ await setLang('ko'); enterChat(); };  // 번역 불필요 → 스탭 언어(번역 스킵)
+    $('langConfirm').onclick=async()=>{
+      const sel=$('langSel'); const lang = sel.value==='other' ? $('otherSel').value : sel.value;
+      await setLang(lang||'en'); enterChat();
+    };
+    async function setLang(lang){
+      try{ await api('POST','/chat/set-lang',{chatToken,lang}); }catch(e){ /* 비치명적 */ }
+    }
+    function enterChat(){
+      $('langCard').classList.add('hidden');
+      $('chatCard').classList.remove('hidden');
+      connect();
+    }
+
+    document.querySelectorAll('input[name="translateMode"]').forEach(el=>el.onchange=e=>{
+      showBoth=e.target.value==='both';
+      document.querySelectorAll('.ch-orig').forEach(x=>x.style.display=showBoth?'block':'none');
+    });
+    function dualTextHtml(primary, secondary, secondaryLabel){
+      let html=esc(primary||'').replace(/\n/g,'<br>');
+      if(secondary){
+        html+=`<div class="ch-orig" style="display:${showBoth?'block':'none'}"><strong>${secondaryLabel}</strong><br>${esc(secondary).replace(/\n/g,'<br>')}</div>`;
+      }
+      return html;
+    }
+
+    function render(m){
+      const mine = m.sender_type==='customer';
+      // 표시: 상대→번역 우선, 나→원문
+      const primary = mine ? (m.original_text||'') : (m.translated_text || m.original_text || '');
+      const secondary = mine
+        ? (m.translated_text || null)
+        : (m.translated_text && m.original_text ? m.original_text : null);
+      const secondaryLabel = mine ? '번역' : '원문';
+      let inner='';
+      if(m.attachment){ inner=`<div class="ch-att">${attachHtml(m.attachment)}</div>`; }
+      else inner=dualTextHtml(primary, secondary, secondaryLabel);
+      const div=document.createElement('div'); div.className='ch-msg'+(mine?' me':''); if(m.id) div.dataset.mid=m.id;
+      const showUnread = mine && Number(m.unread) > 0;
+      div.innerHTML=`<div style="display:flex;flex-direction:column;max-width:80%;${mine?'align-items:flex-end':'align-items:flex-start'}"><div class="ch-bubble">${inner}</div><div style="font-size:10px;color:#9ca3af;margin-top:2px"><span class="ch-unread" style="color:#f59e0b;font-weight:700;margin-right:4px">${showUnread?'1':''}</span>${chFmtTime(m.created_at)}</div></div>`;
+      $('msgs').appendChild(div); $('msgs').scrollTop=$('msgs').scrollHeight;
+    }
+
+    function connect(){
+      socket=io({ auth:{ chatToken } });
+      socket.on('connect',()=>socket.emit('chat:join',{conversationId:convId}));
+      socket.on('chat:history',d=>{ $('msgs').innerHTML=''; d.messages.forEach(render); socket.emit('chat:read',{conversationId:convId}); });
+      socket.on('chat:message',m=>{ if(m.conversation_id===convId){ render(m); socket.emit('chat:read',{conversationId:convId}); } });
+      socket.on('chat:read',d=>{ if(d.conversationId===convId && d.by!=='customer'){ document.querySelectorAll('#msgs .ch-unread').forEach(el=>el.textContent=''); } });
+      socket.on('chat:error',e=>MxAlert.error(e.message));
+    }
+    function send(){ const t=$('msgInput').value.trim(); if(!t||!socket) return; socket.emit('chat:message',{conversationId:convId,text:t}); $('msgInput').value=''; }
+    $('sendMsgBtn').onclick=send;
+    $('msgInput').addEventListener('keydown',e=>{ if(e.key==='Enter') send(); });
+
+    // 파일 업로드 (드래그 & 드롭 + 클릭)
+    const dz=$('dropZone');
+    dz.onclick=()=>$('fileInput').click();
+    $('fileInput').onchange=e=>{ if(e.target.files[0]) upload(e.target.files[0]); e.target.value=''; };
+    ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('over');}));
+    ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('over');}));
+    dz.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) upload(f); });
+    async function upload(file){
+      const fd=new FormData(); fd.append('file',file);
+      try{ const r=await fetch(`/api/public/consult/conversations/${convId}/upload?h=${H}&token=${encodeURIComponent(chatToken)}`,{method:'POST',body:fd});
+        const d=await r.json().catch(()=>({})); if(!r.ok||!d.ok) throw new Error(d.error||'업로드 실패'); }catch(e){ MxAlert.error(e.message); }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 로그인 - 모노라마 병원 CRM 시스템</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/common.css">
+  <style>
+    .admin-badge {
+      display:inline-block; background:#000000; color:#ffffff;
+      border-radius:4px; padding:3px 10px; font-size:12px; font-weight:600;
+      margin-bottom:12px; border:1px solid #3f3f46;
+    }
+    .password-wrap { position:relative; }
+    .password-wrap .toggle-pw {
+      position:absolute; right:11px; top:50%; transform:translateY(-50%);
+      background:none; border:none; cursor:pointer; color:var(--gray-400); font-size:16px;
+    }
+  </style>
+</head>
+<body>
+<div class="auth-page" style="background:#000000">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="admin-badge">SUPERVISOR</div>
+      <h1>모노라마 병원 CRM 시스템</h1>
+      <p>관리자 로그인</p>
+    </div>
+    <form id="adminLoginForm" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="username">아이디 <span class="required">*</span></label>
+        <input class="form-control" type="text" id="username" placeholder="관리자 아이디" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">비밀번호 <span class="required">*</span></label>
+        <div class="password-wrap">
+          <input class="form-control" type="password" id="password" placeholder="비밀번호" autocomplete="current-password" required>
+          <button type="button" class="toggle-pw" id="togglePw">👁</button>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;font-size:13px;color:var(--gray-600)">
+        <label class="form-check" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:#a1a1aa">
+          <input type="checkbox" id="rememberUsername" checked style="cursor:pointer;accent-color:#2563eb">
+          아이디 저장
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%;margin-top:8px;background:#000000;border-color:#000000;color:#ffffff;justify-content:center;text-align:center" id="loginBtn">
+        관리자 로그인
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/alert.js"></script>
+<script>
+  // 저장된 아이디 복원
+  const savedUsername = localStorage.getItem('sv_saved_username');
+  if (savedUsername) {
+    document.getElementById('username').value = savedUsername;
+    document.getElementById('rememberUsername').checked = true;
+  }
+
+  fetch('/api/admin/me').then(r => r.json()).then(d => {
+    if (d.ok) window.location.href = '/supervisor/dashboard';
+  }).catch(() => {});
+
+  document.getElementById('togglePw').addEventListener('click', function() {
+    const pw = document.getElementById('password');
+    pw.type = pw.type === 'password' ? 'text' : 'password';
+    this.textContent = pw.type === 'password' ? '👁' : '🙈';
+  });
+
+  document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const remember = document.getElementById('rememberUsername').checked;
+    const btn      = document.getElementById('loginBtn');
+
+    if (!username || !password) return MxAlert.error('아이디와 비밀번호를 입력하세요.');
+
+    if (remember) {
+      localStorage.setItem('sv_saved_username', username);
+    } else {
+      localStorage.removeItem('sv_saved_username');
+    }
+
+    btn.disabled = true; btn.textContent = '로그인 중...';
+    try {
+      const res  = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) return MxAlert.error(data.error || '로그인 실패');
+
+      let msg = `환영합니다, ${username}님!<br><br>많은 이용을 바랍니다.`;
+      if (data.prevIp && data.prevAt) {
+        const dt = new Date(data.prevAt).toLocaleString('ko-KR');
+        msg += `<br><br><small style="color:#6b7280">마지막 접속: ${data.prevIp} (${dt})</small>`;
+      }
+      await MxAlert.success(msg, { title: '관리자 로그인 성공', confirmText: '시작하기', confirmColor: 'black' });
+      window.location.href = '/supervisor/dashboard';
+    } catch { MxAlert.error('서버 연결 실패'); }
+    finally { btn.disabled = false; btn.textContent = '관리자 로그인'; }
+  });
+</script>
+</body>
+</html>
