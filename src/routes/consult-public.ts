@@ -232,7 +232,7 @@ router.post('/posts', async (req: Request, res: Response) => {
     [conversation.insertId, adv, email, language],
   );
   const baseUrl = (process.env.BASE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
-  const chatUrl = `${baseUrl}/consult-chat?h=${adv}&p=${postId}`;
+  const chatUrl = `${baseUrl}/consult-chat?h=${adv}&p=${postId}&lang=${encodeURIComponent(language)}`;
   let emailSent = true;
   try {
     const hospital = await hospitalName(adv);
@@ -386,9 +386,12 @@ router.delete('/posts/:id', async (req: Request, res: Response) => {
 router.get('/chat/meta', async (req: Request, res: Response) => {
   const adv = advOf(req); const p = parseInt(String(req.query.p || '0'));
   const [rows] = await pool.execute<any[]>(
-    'SELECT title, author_email FROM consult_posts WHERE id=? AND advertiser_id=? AND is_deleted=0', [p, adv]);
+    `SELECT p.title, p.author_email, cc.customer_lang
+       FROM consult_posts p
+       LEFT JOIN chat_conversations cc ON cc.id=p.conversation_id
+      WHERE p.id=? AND p.advertiser_id=? AND p.is_deleted=0`, [p, adv]);
   if (!rows.length) return res.status(404).json({ error: '상담을 찾을 수 없습니다.' });
-  res.json({ ok: true, title: rows[0].title, hospital_name: await hospitalName(adv) });
+  res.json({ ok: true, title: rows[0].title, hospital_name: await hospitalName(adv), language: consultLanguage(rows[0].customer_lang) });
 });
 
 // ── 채팅 번역 언어 옵션 ─────────────────────────────────────
@@ -414,11 +417,14 @@ router.post('/chat/join', async (req: Request, res: Response) => {
   const adv = advOf(req);
   const email = String(req.body.email || '').trim();
   const code = String(req.body.code || '').trim();
+  const requestedLang = consultLanguage(req.body.language);
   const postId = parseInt(String(req.body.p || '0'));
   if (!adv || !email || !code || !postId) return res.status(400).json({ error: '입력값을 확인하세요.' });
 
   const [prows] = await pool.execute<any[]>(
-    'SELECT id, author_email, conversation_id, customer_id FROM consult_posts WHERE id=? AND advertiser_id=? AND is_deleted=0',
+    `SELECT p.id, p.author_email, p.conversation_id, p.customer_id, cc.customer_lang
+       FROM consult_posts p LEFT JOIN chat_conversations cc ON cc.id=p.conversation_id
+      WHERE p.id=? AND p.advertiser_id=? AND p.is_deleted=0`,
     [postId, adv]);
   if (!prows.length) return res.status(404).json({ error: '상담을 찾을 수 없습니다.' });
   const post = prows[0];
@@ -439,7 +445,8 @@ router.post('/chat/join', async (req: Request, res: Response) => {
       WHERE c.advertiser_id = ? AND cv.email = ? AND cv.nationality IS NOT NULL AND cv.nationality <> ''
       ORDER BY cv.visited_at DESC LIMIT 1`, [adv, email]);
   const knownCustomer = cvn.length > 0;
-  const knownLang = knownCustomer ? countryToLang(cvn[0].nationality) : null;
+  const savedLang = post.customer_lang ? consultLanguage(post.customer_lang) : null;
+  const knownLang = savedLang || (knownCustomer ? countryToLang(cvn[0].nationality) : null) || requestedLang;
   // 등록 고객이면 국적 언어를 대화에 자동 반영
   if (knownLang) {
     await pool.execute(
@@ -463,7 +470,7 @@ router.post('/chat/join', async (req: Request, res: Response) => {
   res.json({
     ok: true, chatToken: token, conversationId: post.conversation_id,
     hospital_name: await hospitalName(adv),
-    knownCustomer, customerLang: knownLang || null,
+    knownCustomer: knownCustomer || Boolean(savedLang) || Boolean(req.body.language), customerLang: knownLang,
   });
 });
 

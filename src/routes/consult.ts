@@ -79,10 +79,11 @@ router.get('/posts', viewer, async (req: Request, res: Response) => {
 router.get('/posts/:id', viewer, async (req: Request, res: Response) => {
   const a = adv(req); const id = parseInt(req.params.id);
   const [rows] = await pool.execute<any[]>(
-    `SELECT p.*, d.name AS doctor_name, m.name AS manager_name
+    `SELECT p.*, d.name AS doctor_name, m.name AS manager_name, cc.customer_lang
        FROM consult_posts p
        LEFT JOIN doctors d ON d.id=p.assigned_doctor_id
        LEFT JOIN managers m ON m.id=p.handling_manager_id
+       LEFT JOIN chat_conversations cc ON cc.id=p.conversation_id
       WHERE p.id=? AND p.advertiser_id=? AND p.is_deleted=0`, [id, a]);
   if (!rows.length) return res.status(404).json({ error: '상담글을 찾을 수 없습니다.' });
   const post = rows[0];
@@ -202,7 +203,9 @@ router.post('/posts/:id/answer', viewer, async (req: Request, res: Response) => 
   // 통보 메일 (비치명적)
   try {
     const base = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
-    const chat_url = `${base}/consult-chat?h=${a}&p=${id}&t=${chatToken}`;
+    const [chatLangRows] = await pool.execute<any[]>('SELECT customer_lang FROM chat_conversations WHERE id=?', [convId]);
+    const chatLang = ['ko', 'th'].includes(String(chatLangRows[0]?.customer_lang || '').toLowerCase()) ? String(chatLangRows[0].customer_lang).toLowerCase() : 'en';
+    const chat_url = `${base}/consult-chat?h=${a}&p=${id}&t=${chatToken}&lang=${encodeURIComponent(chatLang)}`;
     const [adv0] = await pool.execute<any[]>('SELECT company_name FROM advertisers WHERE id=?', [a]);
     await sendEmail({
       templateKey: 'consult_answered', to: post.author_email,
