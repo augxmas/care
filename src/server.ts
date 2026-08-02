@@ -188,13 +188,13 @@ async function ensureMysqlColumn(table: string, column: string, definition: stri
   if (!rows.length) await pool.execute(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
 }
 
-async function ensureMysqlIndex(table: string, index: string, columns: string) {
+async function ensureMysqlIndex(table: string, index: string, columns: string, unique = false) {
   const [rows] = await pool.execute<any[]>(
     `SELECT 1 FROM information_schema.statistics
       WHERE table_schema=DATABASE() AND table_name=? AND index_name=? LIMIT 1`,
     [table, index],
   );
-  if (!rows.length) await pool.execute(`CREATE INDEX \`${index}\` ON \`${table}\` (${columns})`);
+  if (!rows.length) await pool.execute(`CREATE ${unique ? 'UNIQUE ' : ''}INDEX \`${index}\` ON \`${table}\` (${columns})`);
 }
 
 async function bootstrap() {
@@ -300,7 +300,7 @@ async function bootstrap() {
     await ensureMysqlColumn('hospitals', 'hospital_id', 'VARCHAR(64) NULL AFTER company_name');
     await pool.execute(`UPDATE hospitals SET hospital_id=CASE WHEN company_name='모즈의원' THEN 'mods' ELSE CONCAT('hospital-',id) END WHERE hospital_id IS NULL OR hospital_id=''`);
     await pool.execute('ALTER TABLE hospitals MODIFY hospital_id VARCHAR(64) NOT NULL');
-    await pool.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_hospitals_hospital_id ON hospitals(hospital_id)');
+    await ensureMysqlIndex('hospitals', 'idx_hospitals_hospital_id', '`hospital_id`', true);
     await pool.execute(
       `INSERT INTO hospital_form_fields (field_key,enabled,required,searchable,sort_order)
        VALUES ('hospital_id',1,1,1,3)
