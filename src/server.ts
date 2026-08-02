@@ -179,11 +179,29 @@ io.engine.use((req: any, res: any, next: any) => {
 app.set('io', io);
 initChat(io);
 
+async function ensureMysqlColumn(table: string, column: string, definition: string) {
+  const [rows] = await pool.execute<any[]>(
+    `SELECT 1 FROM information_schema.columns
+      WHERE table_schema=DATABASE() AND table_name=? AND column_name=? LIMIT 1`,
+    [table, column],
+  );
+  if (!rows.length) await pool.execute(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
+}
+
+async function ensureMysqlIndex(table: string, index: string, columns: string) {
+  const [rows] = await pool.execute<any[]>(
+    `SELECT 1 FROM information_schema.statistics
+      WHERE table_schema=DATABASE() AND table_name=? AND index_name=? LIMIT 1`,
+    [table, index],
+  );
+  if (!rows.length) await pool.execute(`CREATE INDEX \`${index}\` ON \`${table}\` (${columns})`);
+}
+
 async function bootstrap() {
   // Verify database connection at startup
   await checkDatabaseConnection();
   if (!getIsSqlite()) {
-    await pool.execute('ALTER TABLE consult_credentials ADD COLUMN IF NOT EXISTS code_hash VARCHAR(255) NULL AFTER email');
+    await ensureMysqlColumn('consult_credentials', 'code_hash', 'VARCHAR(255) NULL AFTER email');
     const [legacyCredentialColumns] = await pool.execute<any[]>(
       `SELECT column_name FROM information_schema.columns
         WHERE table_schema=DATABASE() AND table_name='consult_credentials' AND column_name='password_hash'`,
@@ -193,7 +211,7 @@ async function bootstrap() {
       await pool.execute('ALTER TABLE consult_credentials MODIFY password_hash LONGTEXT NULL');
     }
     await pool.execute('ALTER TABLE consult_credentials MODIFY code_hash VARCHAR(255) NOT NULL');
-    await pool.execute('ALTER TABLE consult_credentials ADD COLUMN IF NOT EXISTS updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+    await ensureMysqlColumn('consult_credentials', 'updated_at', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
     await pool.execute('ALTER TABLE consult_posts MODIFY password_hash VARCHAR(255) NULL');
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS resource_images (
@@ -214,9 +232,9 @@ async function bootstrap() {
     `);
     // Keep chat_tokens compatible with databases created before public consultation
     // tokens started carrying the hospital and customer identity.
-    await pool.execute('ALTER TABLE chat_tokens ADD COLUMN IF NOT EXISTS advertiser_id BIGINT NULL AFTER token');
-    await pool.execute('ALTER TABLE chat_tokens ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255) NULL AFTER conversation_id');
-    await pool.execute('ALTER TABLE chat_tokens ADD COLUMN IF NOT EXISTS revoked TINYINT(1) NOT NULL DEFAULT 0 AFTER expires_at');
+    await ensureMysqlColumn('chat_tokens', 'advertiser_id', 'BIGINT NULL AFTER token');
+    await ensureMysqlColumn('chat_tokens', 'customer_email', 'VARCHAR(255) NULL AFTER conversation_id');
+    await ensureMysqlColumn('chat_tokens', 'revoked', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER expires_at');
     const [legacyChatTokenColumns] = await pool.execute<any[]>(
       `SELECT column_name FROM information_schema.columns
         WHERE table_schema=DATABASE() AND table_name='chat_tokens' AND column_name='participant_type'`,
@@ -231,12 +249,12 @@ async function bootstrap() {
               t.customer_email=COALESCE(t.customer_email,c.customer_email)
         WHERE t.advertiser_id IS NULL OR t.customer_email IS NULL`,
     );
-    await pool.execute('CREATE INDEX IF NOT EXISTS idx_chat_tokens_lookup ON chat_tokens(token,revoked)');
-    await pool.execute('ALTER TABLE chat_attachments ADD COLUMN IF NOT EXISTS advertiser_id BIGINT NULL AFTER id');
-    await pool.execute('ALTER TABLE chat_attachments ADD COLUMN IF NOT EXISTS uploader_type VARCHAR(20) NULL AFTER conversation_id');
-    await pool.execute('ALTER TABLE chat_attachments ADD COLUMN IF NOT EXISTS uploader_id BIGINT NULL AFTER uploader_type');
-    await pool.execute('ALTER TABLE chat_attachments ADD COLUMN IF NOT EXISTS original_name VARCHAR(255) NULL AFTER file_path');
-    await pool.execute('ALTER TABLE chat_attachments ADD COLUMN IF NOT EXISTS size_bytes INT NULL AFTER mime_type');
+    await ensureMysqlIndex('chat_tokens', 'idx_chat_tokens_lookup', '`token`,`revoked`');
+    await ensureMysqlColumn('chat_attachments', 'advertiser_id', 'BIGINT NULL AFTER id');
+    await ensureMysqlColumn('chat_attachments', 'uploader_type', 'VARCHAR(20) NULL AFTER conversation_id');
+    await ensureMysqlColumn('chat_attachments', 'uploader_id', 'BIGINT NULL AFTER uploader_type');
+    await ensureMysqlColumn('chat_attachments', 'original_name', 'VARCHAR(255) NULL AFTER file_path');
+    await ensureMysqlColumn('chat_attachments', 'size_bytes', 'INT NULL AFTER mime_type');
     const [legacyAttachmentColumns] = await pool.execute<any[]>(
       `SELECT column_name FROM information_schema.columns
         WHERE table_schema=DATABASE() AND table_name='chat_attachments'
@@ -263,9 +281,7 @@ async function bootstrap() {
           SET att.advertiser_id=COALESCE(att.advertiser_id,c.advertiser_id)
         WHERE att.advertiser_id IS NULL`,
     );
-    await pool.execute(
-      'ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS staff_only TINYINT(1) NOT NULL DEFAULT 0 AFTER attachment_id',
-    );
+    await ensureMysqlColumn('chat_messages', 'staff_only', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER attachment_id');
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS consult_post_attachments (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -279,9 +295,9 @@ async function bootstrap() {
         KEY idx_consult_post_attachment (advertiser_id,post_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
-    await pool.execute('ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS company_name_en VARCHAR(200) NULL AFTER company_name');
-    await pool.execute('ALTER TABLE advertisers ADD COLUMN IF NOT EXISTS company_name_en VARCHAR(200) NULL AFTER company_name');
-    await pool.execute('ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS hospital_id VARCHAR(64) NULL AFTER company_name');
+    await ensureMysqlColumn('hospitals', 'company_name_en', 'VARCHAR(200) NULL AFTER company_name');
+    await ensureMysqlColumn('advertisers', 'company_name_en', 'VARCHAR(200) NULL AFTER company_name');
+    await ensureMysqlColumn('hospitals', 'hospital_id', 'VARCHAR(64) NULL AFTER company_name');
     await pool.execute(`UPDATE hospitals SET hospital_id=CASE WHEN company_name='모즈의원' THEN 'mods' ELSE CONCAT('hospital-',id) END WHERE hospital_id IS NULL OR hospital_id=''`);
     await pool.execute('ALTER TABLE hospitals MODIFY hospital_id VARCHAR(64) NOT NULL');
     await pool.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_hospitals_hospital_id ON hospitals(hospital_id)');

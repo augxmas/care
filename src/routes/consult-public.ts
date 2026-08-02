@@ -50,9 +50,17 @@ async function ensureChatTokenSchema(): Promise<void> {
   if (getIsSqlite()) return;
   if (!chatTokenSchemaReady) {
     chatTokenSchemaReady = (async () => {
-      await pool.execute('ALTER TABLE chat_tokens ADD COLUMN IF NOT EXISTS advertiser_id BIGINT NULL AFTER token');
-      await pool.execute('ALTER TABLE chat_tokens ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255) NULL AFTER conversation_id');
-      await pool.execute('ALTER TABLE chat_tokens ADD COLUMN IF NOT EXISTS revoked TINYINT(1) NOT NULL DEFAULT 0 AFTER expires_at');
+      const ensureColumn = async (column: string, definition: string) => {
+        const [rows] = await pool.execute<any[]>(
+          `SELECT 1 FROM information_schema.columns
+             WHERE table_schema=DATABASE() AND table_name='chat_tokens' AND column_name=? LIMIT 1`,
+          [column],
+        );
+        if (!rows.length) await pool.execute(`ALTER TABLE chat_tokens ADD COLUMN \`${column}\` ${definition}`);
+      };
+      await ensureColumn('advertiser_id', 'BIGINT NULL AFTER token');
+      await ensureColumn('customer_email', 'VARCHAR(255) NULL AFTER conversation_id');
+      await ensureColumn('revoked', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER expires_at');
       const [legacyColumns] = await pool.execute<any[]>(
         `SELECT column_name FROM information_schema.columns
            WHERE table_schema=DATABASE() AND table_name='chat_tokens' AND column_name='participant_type'`,
