@@ -85,6 +85,7 @@ app.get('/admin/register', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'register.html'));
 });
 app.get('/admin/dashboard', (_req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
 });
 

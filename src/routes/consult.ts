@@ -5,7 +5,7 @@ import { requireRole } from '../middleware/auth';
 import { getActor } from '../utils/actor';
 import { sendEmail } from '../services/email.service';
 import { uploadChatFile } from '../middleware/upload';
-import { systemChat } from '../services/llm.service';
+import { systemChat, translate } from '../services/llm.service';
 import { broadcastAttachment } from '../realtime/chat';
 import { appendChatTrainingLog } from '../services/chat-log.service';
 
@@ -134,6 +134,47 @@ router.get('/posts/:id/history', viewer, async (req: Request, res: Response) => 
   res.json({ ok: true, email: author_email, hospital_patient_id, visits, appointments: appts });
 });
 
+// 상담 원문/답변 번역 미리보기
+router.post('/posts/:id/translate', viewer, async (req: Request, res: Response) => {
+  const a = adv(req); const id = parseInt(req.params.id);
+  const [rows] = await pool.execute<any[]>(
+    `SELECT p.id, p.title, p.body, p.lang, p.author_email, p.assigned_doctor_id,
+            p.conversation_id, cc.customer_lang
+       FROM consult_posts p
+       LEFT JOIN chat_conversations cc ON cc.id=p.conversation_id
+      WHERE p.id=? AND p.advertiser_id=? AND p.is_deleted=0`, [id, a]);
+  if (!rows.length) return res.status(404).json({ error: '상담글을 찾을 수 없습니다.' });
+  const post = rows[0];
+  if (sessRole(req) === 'doctor' && post.assigned_doctor_id !== sessId(req)) {
+    return res.status(403).json({ error: '배정된 상담만 볼 수 있습니다.' });
+  }
+  const actorType = sessRole(req) === 'doctor' ? 'doctor' : sessRole(req) === 'manager' ? 'manager' : 'advertiser';
+  const ctx = { advertiserId: a, conversationId: post.conversation_id || undefined,
+    actorType: actorType as 'doctor' | 'manager' | 'advertiser', actorId: sessId(req) || null,
+    customerEmail: post.author_email };
+  const mode = String(req.body.mode || 'request');
+  if (mode === 'answer') {
+    const text = String(req.body.text || '').trim();
+    if (!text) return res.status(400).json({ error: '번역할 답변을 입력하세요.' });
+    const targetLang = String(post.customer_lang || post.lang || 'en').toLowerCase().slice(0, 8);
+    const result = await translate(text, targetLang, ctx);
+    if (!result.translatedText && String(result.detectedLang || '').slice(0, 2) !== targetLang.slice(0, 2)) {
+      return res.status(502).json({ error: '답변 번역에 실패했습니다. 잠시 후 다시 시도하세요.' });
+    }
+    return res.json({ ok: true, target_lang: targetLang, translated_text: result.translatedText || text });
+  }
+  const [titleResult, bodyResult] = await Promise.all([
+    translate(String(post.title || ''), 'ko', ctx),
+    translate(String(post.body || ''), 'ko', ctx),
+  ]);
+  const sourceLang = bodyResult.detectedLang || post.customer_lang || post.lang || null;
+  if (!bodyResult.translatedText && String(sourceLang || '').slice(0, 2) !== 'ko') {
+    return res.status(502).json({ error: '상담내용 번역에 실패했습니다. 잠시 후 다시 시도하세요.' });
+  }
+  res.json({ ok: true, source_lang: sourceLang,
+    title: titleResult.translatedText || post.title, body: bodyResult.translatedText || post.body });
+});
+
 // ── 처리 배정 (담당자 처리 / 의사 지정) ─────────────────────
 router.post('/posts/:id/assign', scheduler, async (req: Request, res: Response) => {
   const a = adv(req); const id = parseInt(req.params.id);
@@ -174,7 +215,7 @@ async function ensureConversation(a: number, post: any): Promise<number> {
 // ── 답변 작성 (담당자/의사 둘 다 가능) → 채팅링크 메일 ───────
 router.post('/posts/:id/answer', viewer, async (req: Request, res: Response) => {
   const a = adv(req); const id = parseInt(req.params.id);
-  const body = String(req.body.body || '').trim();
+  let body = String(req.body.body || '').trim();
   if (!body) return res.status(400).json({ error: '답변 내용을 입력하세요.' });
   const role = sessRole(req);
   const authorType = role === 'doctor' ? 'doctor' : 'manager';
@@ -188,6 +229,24 @@ router.post('/posts/:id/answer', viewer, async (req: Request, res: Response) => 
   }
 
   const convId = await ensureConversation(a, post);
+  let translatedFromKo = false;
+  let answerLang = 'ko';
+  if (req.body.translate_to_customer) {
+    const [langRows] = await pool.execute<any[]>(
+      'SELECT customer_lang FROM chat_conversations WHERE id=? AND advertiser_id=?', [convId, a]);
+    answerLang = String(langRows[0]?.customer_lang || post.lang || 'en').toLowerCase().slice(0, 8);
+    if (answerLang !== 'ko') {
+      const result = await translate(body, answerLang, {
+        advertiserId: a, conversationId: convId,
+        actorType: (role === 'doctor' ? 'doctor' : role === 'manager' ? 'manager' : 'advertiser') as any,
+        actorId: sessId(req) || null, customerEmail: post.author_email,
+      });
+      if (!result.translatedText && String(result.detectedLang || '').slice(0, 2) !== answerLang.slice(0, 2)) {
+        return res.status(502).json({ error: '답변 번역에 실패하여 등록하지 않았습니다. 잠시 후 다시 시도하세요.' });
+      }
+      if (result.translatedText) { body = result.translatedText; translatedFromKo = true; }
+    }
+  }
   // 스탭 참가자 등록
   const dispName = sessName(req) || (authorType === 'doctor' ? '의사' : '담당자');
   await pool.execute(
@@ -214,7 +273,7 @@ router.post('/posts/:id/answer', viewer, async (req: Request, res: Response) => 
     });
   } catch (e) { console.error('[consult] 답변 메일 실패', (e as any)?.message); }
 
-  res.json({ ok: true, conversation_id: convId });
+  res.json({ ok: true, conversation_id: convId, translated: translatedFromKo, answer_lang: answerLang });
 });
 
 // ── 상담 종결 ───────────────────────────────────────────────

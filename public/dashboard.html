@@ -2999,7 +2999,9 @@
       const lmsg = await fetchDoctorsOptions();
       let html = `<div style="font-weight:700;font-size:16px">${cEsc(p.title)}</div>
         <div style="font-size:12px;color:var(--gray-500);margin:4px 0 10px">${cEsc(p.author_email)} · ${p.created_at} · 상태 ${p.status}${p.hospital_patient_id?' · 병원ID '+cEsc(p.hospital_patient_id):''}</div>
-        <div style="white-space:pre-wrap;line-height:1.5;border:1px solid var(--gray-100);border-radius:6px;padding:10px;background:#fafafa">${cEsc(p.body)}</div>`;
+        <div style="white-space:pre-wrap;line-height:1.5;border:1px solid var(--gray-100);border-radius:6px;padding:10px;background:#fafafa">${cEsc(p.body)}</div>
+        <div style="margin-top:7px"><button class="btn btn-ghost btn-sm" id="cpTranslateRequest">🌐 상담내용 한글로 번역</button></div>
+        <div id="cpRequestKo" style="display:none;white-space:pre-wrap;line-height:1.5;border:1px solid #bfdbfe;border-radius:6px;padding:10px;margin-top:7px;background:#eff6ff"></div>`;
       // 고객 이력
       html += `<div style="font-weight:700;margin:14px 0 6px">고객 이력 (방문 ${hist.visits.length})</div>`;
       if (hist.visits.length) html += '<div style="font-size:12px">'+hist.visits.slice(0,8).map(v=>`<div style="padding:3px 0;border-bottom:1px solid var(--gray-100)">${v.treated_at||'-'} · ${cEsc(v.name||'')} · ${cEsc(v.visit_type||'')} · ${v.payment_amount?Number(v.payment_amount).toLocaleString()+'원':''} · 의사 ${cEsc(v.doctor_name||'-')}</div>`).join('')+'</div>';
@@ -3016,8 +3018,16 @@
       (d.answers||[]).forEach(a=>{ html += `<div style="border-left:3px solid var(--primary);background:#f8fafc;border-radius:6px;padding:10px;margin-bottom:8px">
         <div style="font-size:12px;color:var(--gray-500)">${a.author_type==='doctor'?'의사':'담당자'} ${cEsc(a.author_name||'')} · ${a.created_at}</div>
         <div style="white-space:pre-wrap;margin-top:4px">${cEsc(a.body)}</div></div>`; });
-      html += `<textarea class="form-control" id="cpAnswer" rows="3" placeholder="답변 작성 (저장 시 고객에게 채팅 링크가 메일로 발송됩니다)"></textarea>
+      const customerLang = String(p.customer_lang || p.lang || 'en').toLowerCase();
+      const langLabels = {ko:'한국어',en:'영어',th:'태국어',vi:'베트남어',zh:'중국어',ja:'일본어',ru:'러시아어',ar:'아랍어',mn:'몽골어',id:'인도네시아어'};
+      html += `<textarea class="form-control" id="cpAnswer" rows="3" placeholder="한글로 답변을 작성하세요"></textarea>
+        <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--gray-600)">
+          <input type="checkbox" id="cpTranslateAnswer" ${customerLang==='ko'?'':'checked'}>
+          고객 언어(${cEsc(langLabels[customerLang]||customerLang)})로 자동 번역 후 등록
+        </label>
+        <div id="cpAnswerPreview" style="display:none;white-space:pre-wrap;border:1px solid #bfdbfe;border-radius:6px;padding:9px;margin-top:7px;background:#eff6ff;font-size:13px"></div>
         <div style="display:flex;gap:8px;margin-top:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" id="cpPreviewAnswer">🌐 번역 미리보기</button>
           <button class="btn btn-primary btn-sm" id="cpAnswerBtn">답변 등록</button>
           ${p.conversation_id?`<button class="btn btn-ghost btn-sm" id="cpOpenChat">💬 채팅 열기</button>`:''}
           ${chatTok?`<button class="btn btn-ghost btn-sm" id="cpChatLink">🔗 채팅링크 복사</button>`:''}
@@ -3027,10 +3037,22 @@
       document.getElementById('cpBody').innerHTML = html;
       openOverlay('consultPostOverlay');
       const byId = x=>document.getElementById(x);
+      if (byId('cpTranslateRequest')) byId('cpTranslateRequest').onclick = async ()=>{
+        const btn=byId('cpTranslateRequest'); btn.disabled=true; btn.textContent='번역 중...';
+        try{ const tr=await cApi('POST',`/posts/${id}/translate`,{mode:'request'}); const box=byId('cpRequestKo'); box.textContent=`[제목] ${tr.title}\n\n${tr.body}`; box.style.display='block'; btn.textContent='✓ 한글 번역 완료'; }
+        catch(e){ btn.disabled=false; btn.textContent='🌐 상담내용 한글로 번역'; MxAlert.error(e.message); }
+      };
+      if (byId('cpPreviewAnswer')) byId('cpPreviewAnswer').onclick = async ()=>{
+        const text=byId('cpAnswer').value.trim(); if(!text) return MxAlert.error('답변을 입력하세요.');
+        if(!byId('cpTranslateAnswer').checked){ const box=byId('cpAnswerPreview'); box.textContent='자동 번역이 꺼져 있습니다.'; box.style.display='block'; return; }
+        const btn=byId('cpPreviewAnswer'); btn.disabled=true; btn.textContent='번역 중...';
+        try{ const tr=await cApi('POST',`/posts/${id}/translate`,{mode:'answer',text}); const box=byId('cpAnswerPreview'); box.textContent=tr.translated_text; box.style.display='block'; }
+        catch(e){ MxAlert.error(e.message); } finally { btn.disabled=false; btn.textContent='🌐 번역 미리보기'; }
+      };
       if (byId('cpHandleMgr')) byId('cpHandleMgr').onclick = ()=> doAssign(id,{handle:'manager'});
       if (byId('cpAssignDoc')) byId('cpAssignDoc').onclick = ()=>{ const dv=byId('cpDoctor').value; if(!dv) return MxAlert.error('의사를 선택하세요.'); doAssign(id,{handle:'doctor',doctor_id:dv}); };
       byId('cpAnswerBtn').onclick = async ()=>{ const body=byId('cpAnswer').value.trim(); if(!body) return MxAlert.error('답변을 입력하세요.');
-        try{ await cApi('POST',`/posts/${id}/answer`,{body}); consultToast('답변이 등록되었습니다.'); closeOverlay('consultPostOverlay'); consultGrid.load(); }catch(e){ MxAlert.error(e.message); } };
+        try{ const result=await cApi('POST',`/posts/${id}/answer`,{body,translate_to_customer:byId('cpTranslateAnswer').checked}); consultToast(result.translated?'고객 언어로 번역하여 답변을 등록했습니다.':'답변이 등록되었습니다.'); closeOverlay('consultPostOverlay'); consultGrid.load(); }catch(e){ MxAlert.error(e.message); } };
       if (byId('cpClose')) byId('cpClose').onclick = async ()=>{ try{ await cApi('POST',`/posts/${id}/close`); consultToast('종결되었습니다.'); closeOverlay('consultPostOverlay'); consultGrid.load(); }catch(e){ MxAlert.error(e.message); } };
       if (byId('cpOpenChat')) byId('cpOpenChat').onclick = ()=>{ closeOverlay('consultPostOverlay'); document.querySelector('.tab-btn[data-consulttab="chat"]').click(); setTimeout(()=>ccOpenConversation(p.conversation_id),200); };
       if (byId('cpChatLink')) byId('cpChatLink').onclick = ()=>{ const h=currentUser.id||currentUser.user_id||''; const lang=['ko','th'].includes(String(p.customer_lang||'').toLowerCase())?String(p.customer_lang).toLowerCase():'en'; const url=`${location.origin}/consult-chat?h=${h}&p=${id}&t=${chatTok}&lang=${encodeURIComponent(lang)}`; (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(()=>consultToast('채팅 링크가 복사되었습니다.')).catch(()=>{ MxAlert.alert(url,{title:'🔗 채팅 링크 (복사)'}); }); };
@@ -3081,7 +3103,22 @@
     return `📎 <a href="${cEsc(url)}" target="_blank" style="color:inherit">${cEsc(att.name||'첨부파일')}</a>`;
   }
   function ccScroll(){ const box=document.getElementById('ccMsgs'); box.scrollTop=box.scrollHeight; }
-  function ccFmtTime(ts){ if(!ts) return ''; let s=String(ts).replace('T',' ').replace('Z','').replace(/\.\d+/,'').trim().slice(0,19); if(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(s)) s+=':00'; return s; }
+  function ccFmtTime(ts){
+    if(!ts) return '';
+    const raw=String(ts).trim();
+    // DB의 DATETIME/CURRENT_TIMESTAMP와 소켓 실시간 값은 UTC 기준이다.
+    // 시간대 표기가 없는 값도 UTC로 명시해 한국시간으로 일관되게 표시한다.
+    const normalized=/[zZ]$|[+-]\d{2}:?\d{2}$/.test(raw)
+      ? raw
+      : raw.replace(' ','T')+'Z';
+    const date=new Date(normalized);
+    if(Number.isNaN(date.getTime())) return raw.replace('T',' ').replace('Z','').slice(0,19);
+    const parts=new Intl.DateTimeFormat('en-CA',{
+      timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+    }).formatToParts(date).reduce((out,p)=>(out[p.type]=p.value,out),{});
+    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
+  }
   function ccDualTextHtml(primary, secondary, secondaryLabel) {
     let html = cEsc(primary || '').replace(/\n/g, '<br>');
     if (secondary) {

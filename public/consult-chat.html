@@ -107,7 +107,22 @@
       if(isImg) return `<a href="${esc(url)}" target="_blank" style="display:block"><img src="${esc(url)}" alt="${esc(att.name||'')}" style="max-width:100%;width:auto;height:auto;max-height:260px;border-radius:8px;display:block;cursor:zoom-in"></a>`;
       return `📎 <a href="${esc(url)}" target="_blank">${esc(att.name||tr('attachment'))}</a>`;
     }
-    function chFmtTime(ts){ if(!ts) return ''; let s=String(ts).replace('T',' ').replace('Z','').replace(/\.\d+/,'').trim().slice(0,19); if(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(s)) s+=':00'; return s; }
+    function chFmtTime(ts){
+      if(!ts) return '';
+      const raw=String(ts).trim();
+      // DB의 DATETIME/CURRENT_TIMESTAMP와 소켓 실시간 값은 UTC 기준이다.
+      // 시간대 표기가 없는 값도 UTC로 명시해 한국시간으로 일관되게 표시한다.
+      const normalized=/[zZ]$|[+-]\d{2}:?\d{2}$/.test(raw)
+        ? raw
+        : raw.replace(' ','T')+'Z';
+      const date=new Date(normalized);
+      if(Number.isNaN(date.getTime())) return raw.replace('T',' ').replace('Z','').slice(0,19);
+      const parts=new Intl.DateTimeFormat('en-CA',{
+        timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',
+        hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+      }).formatToParts(date).reduce((out,p)=>(out[p.type]=p.value,out),{});
+      return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
+    }
     function csToast(message){
       let c=document.getElementById('cs-toast-wrap');
       if(!c){ c=document.createElement('div'); c.id='cs-toast-wrap';
