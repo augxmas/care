@@ -84,7 +84,7 @@
   <script>
     const P = new URLSearchParams(location.search);
     const H = P.get('h'), POST = P.get('p'), T = P.get('t');
-    const LANG=(()=>{const raw=String(P.get('lang')||navigator.languages?.[0]||navigator.language||'en').toLowerCase().split('-')[0];return raw==='ko'||raw==='th'?raw:'en';})();
+    const LANG=(()=>{let saved='';try{saved=localStorage.getItem('mods_language')||''}catch{}const raw=String(P.get('lang')||saved||navigator.languages?.[0]||navigator.language||'en').toLowerCase().split('-')[0];return raw==='ko'||raw==='th'?raw:'en';})();
     document.documentElement.lang=LANG;
     const $ = id => document.getElementById(id);
     let chatToken=null, convId=null, socket=null, showBoth=true;
@@ -116,7 +116,7 @@
 
     $('codeToggle').onclick=function(){ const c=$('code'); c.type=c.type==='password'?'text':'password'; this.textContent=c.type==='password'?'👁':'🙈'; };
     $('sendBtn').onclick=async()=>{ const email=$('email').value.trim(); if(!email) return MxAlert.error('이메일을 입력하세요.');
-      try{ await api('POST','/send-code',{email,language:LANG}); $('sendBtn').textContent='코드 재발급'; csToast('인증코드를 메일로 보냈습니다. 이 코드가 비밀번호입니다.'); $('code').focus(); }catch(e){ MxAlert.error(e.message); } };
+      try{ await api('POST','/send-code',{email,language:LANG,p:POST}); $('sendBtn').textContent='코드 재발급'; csToast('인증코드를 메일로 보냈습니다. 이 코드가 비밀번호입니다.'); $('code').focus(); }catch(e){ MxAlert.error(e.message); } };
     $('joinBtn').onclick=async()=>{ const email=$('email').value.trim(), code=$('code').value.trim();
       if(!email||!code) return MxAlert.error('이메일과 인증코드를 입력하세요.');
       try{ const d=await api('POST','/chat/join',{email,code,p:POST,language:LANG}); chatToken=d.chatToken; convId=d.conversationId;

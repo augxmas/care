@@ -156,7 +156,18 @@ router.get('/meta', async (req: Request, res: Response) => {
 // ── 인증코드 발송 ───────────────────────────────────────────
 router.post('/send-code', async (req: Request, res: Response) => {
   const adv = advOf(req); const email = String(req.body.email || '').trim();
-  const language = consultLanguage(req.body.language);
+  let language = consultLanguage(req.body.language);
+  const postId = parseInt(String(req.body.p || '0'));
+  if (adv && postId) {
+    const [languageRows] = await pool.execute<any[]>(
+      `SELECT cc.customer_lang
+         FROM consult_posts p
+         LEFT JOIN chat_conversations cc ON cc.id=p.conversation_id
+        WHERE p.id=? AND p.advertiser_id=? AND p.is_deleted=0`,
+      [postId, adv],
+    );
+    if (languageRows[0]?.customer_lang) language = consultLanguage(languageRows[0].customer_lang);
+  }
   if (!adv) return res.status(400).json({ error: '잘못된 접근입니다.' });
   if (!emailOk(email)) return res.status(400).json({ error: '이메일 형식이 올바르지 않습니다.' });
   // 레이트리밋: email당 10분 5회 + IP 10분 10회
