@@ -1,7 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import pool from '../config/database';
+import fs from 'fs';
+import path from 'path';
+import pool, { getIsSqlite } from '../config/database';
 import { sendEmail } from '../services/email.service';
 import { uploadChatFile } from '../middleware/upload';
 import { broadcastAttachment } from '../realtime/chat';
@@ -18,6 +20,11 @@ function clientIp(req: Request): string {
 }
 function emailOk(e: any): boolean { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(e || '')); }
 function advOf(req: Request): number { return parseInt(String(req.query.h || req.body.h || '0')); }
+function utf8FileName(name: string): string {
+  if (!/[\u0080-\u00ff]/.test(name)) return name;
+  const decoded = Buffer.from(name, 'latin1').toString('utf8');
+  return decoded.includes('\uFFFD') ? name : decoded;
+}
 
 // stateless 서명 토큰 (board/view) — 테이블 불필요
 function signToken(payload: any): string {
@@ -37,6 +44,29 @@ function verifyToken(token: string): any | null {
   } catch { return null; }
 }
 const MIN = 60 * 1000;
+
+let chatTokenSchemaReady: Promise<void> | null = null;
+async function ensureChatTokenSchema(): Promise<void> {
+  if (getIsSqlite()) return;
+  if (!chatTokenSchemaReady) {
+    chatTokenSchemaReady = (async () => {
+      await pool.execute('ALTER TABLE chat_tokens ADD COLUMN IF NOT EXISTS advertiser_id BIGINT NULL AFTER token');
+      await pool.execute('ALTER TABLE chat_tokens ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255) NULL AFTER conversation_id');
+      await pool.execute('ALTER TABLE chat_tokens ADD COLUMN IF NOT EXISTS revoked TINYINT(1) NOT NULL DEFAULT 0 AFTER expires_at');
+      const [legacyColumns] = await pool.execute<any[]>(
+        `SELECT column_name FROM information_schema.columns
+           WHERE table_schema=DATABASE() AND table_name='chat_tokens' AND column_name='participant_type'`,
+      );
+      if (legacyColumns.length) {
+        await pool.execute('ALTER TABLE chat_tokens MODIFY participant_type LONGTEXT NULL');
+      }
+    })().catch((error) => {
+      chatTokenSchemaReady = null;
+      throw error;
+    });
+  }
+  await chatTokenSchemaReady;
+}
 
 async function hospitalName(adv: number): Promise<string> {
   const [r] = await pool.execute<any[]>('SELECT company_name FROM advertisers WHERE id=?', [adv]);
@@ -148,6 +178,36 @@ router.post('/posts', async (req: Request, res: Response) => {
   res.json({ ok: true, id: r.insertId });
 });
 
+router.post('/posts/:id/attachments', async (req: Request, res: Response, next: NextFunction) => {
+  const adv = advOf(req);
+  const token = verifyToken(String(req.query.boardToken || ''));
+  const postId = parseInt(req.params.id);
+  if (!token || token.k !== 'board' || token.adv !== adv || !token.email) {
+    return res.status(401).json({ error: '본인확인이 필요합니다.' });
+  }
+  const [posts] = await pool.execute<any[]>(
+    'SELECT id FROM consult_posts WHERE id=? AND advertiser_id=? AND author_email=? AND is_deleted=0',
+    [postId, adv, token.email],
+  );
+  if (!posts.length) return res.status(404).json({ error: '상담을 찾을 수 없습니다.' });
+  (req as any).chatCtx = { advertiserId: adv };
+  uploadChatFile.array('files', 5)(req, res, async (error: any) => {
+    if (error) return res.status(400).json({ error: error.message || '파일을 업로드하지 못했습니다.' });
+    try {
+      const files = (req.files as Express.Multer.File[]) || [];
+      for (const file of files) {
+        const rel = `uploads/active/${adv}/chat/${file.filename}`;
+        await pool.execute(
+          `INSERT INTO consult_post_attachments
+           (advertiser_id,post_id,file_path,original_name,mime_type,size_bytes) VALUES (?,?,?,?,?,?)`,
+          [adv, postId, rel, utf8FileName(file.originalname), file.mimetype, file.size],
+        );
+      }
+      res.json({ ok: true, count: files.length });
+    } catch (uploadError) { next(uploadError); }
+  });
+});
+
 // ── 내 글 목록 (제목·상태만) ────────────────────────────────
 router.post('/my-posts', async (req: Request, res: Response) => {
   const adv = advOf(req);
@@ -210,7 +270,27 @@ router.get('/posts/:id', async (req: Request, res: Response) => {
        LEFT JOIN doctors d ON d.id=a.author_id AND a.author_type='doctor'
        LEFT JOIN managers m ON m.id=a.author_id AND a.author_type='manager'
       WHERE a.post_id=? AND a.is_deleted=0 ORDER BY a.created_at`, [id]);
-  res.json({ ok: true, post: rows[0], answers });
+  const [attachments] = await pool.execute<any[]>(
+    'SELECT id,original_name,mime_type,size_bytes FROM consult_post_attachments WHERE advertiser_id=? AND post_id=? ORDER BY id',
+    [adv, id],
+  );
+  res.json({ ok: true, post: rows[0], answers, attachments });
+});
+
+router.get('/posts/:id/attachments/:attachmentId', async (req: Request, res: Response) => {
+  const adv = advOf(req); const id = parseInt(req.params.id);
+  const vt = verifyToken(String(req.query.token || ''));
+  if (!vt || vt.k !== 'view' || vt.adv !== adv || vt.postId !== id) {
+    return res.status(401).json({ error: '본인확인이 필요합니다.' });
+  }
+  const [rows] = await pool.execute<any[]>(
+    'SELECT file_path,original_name FROM consult_post_attachments WHERE id=? AND advertiser_id=? AND post_id=?',
+    [req.params.attachmentId, adv, id],
+  );
+  if (!rows.length) return res.status(404).json({ error: '첨부파일을 찾을 수 없습니다.' });
+  const filePath = path.resolve(process.cwd(), rows[0].file_path);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: '첨부파일이 존재하지 않습니다.' });
+  res.download(filePath, rows[0].original_name);
 });
 
 // ── 글 수정 ─────────────────────────────────────────────────
@@ -305,6 +385,10 @@ router.post('/chat/join', async (req: Request, res: Response) => {
 
   const token = crypto.randomBytes(24).toString('hex');
   const expiresAt = new Date(Date.now() + 2 * 60 * MIN);
+  // Some installations still have the legacy chat_tokens definition. Repair
+  // the active database connection before writing so this route is safe even
+  // when startup migrations were skipped by an older server process.
+  await ensureChatTokenSchema();
   await pool.execute(
     'INSERT INTO chat_tokens (token, advertiser_id, conversation_id, customer_email, expires_at) VALUES (?,?,?,?,?)',
     [token, adv, post.conversation_id, email, expiresAt]);

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>캠페인 수집 폼</title>
+  <title>Campaign Form</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/common.css">
   <style>
@@ -40,15 +40,15 @@
   <main class="form-shell">
     <section class="form-panel">
       <div class="form-head">
-        <h1 id="title">캠페인 수집 폼</h1>
+        <h1 id="title">Campaign Form</h1>
         <p id="description"></p>
       </div>
       <form id="collectForm">
         <div class="form-body" id="fieldHost">
-          <div class="empty-state">폼을 불러오는 중입니다.</div>
+          <div class="empty-state">Loading form...</div>
         </div>
         <div class="submit-row">
-          <button class="btn btn-primary" id="submitBtn" type="submit">제출</button>
+          <button class="btn btn-primary" id="submitBtn" type="submit">Submit</button>
         </div>
       </form>
     </section>
@@ -61,6 +61,50 @@
     const fieldHost = document.getElementById('fieldHost');
     const form = document.getElementById('collectForm');
     const submitBtn = document.getElementById('submitBtn');
+    const SUPPORTED_LANGUAGES = ['ko', 'th', 'vi', 'ar', 'en', 'zh', 'ja'];
+    let locale = 'en';
+    const UI = {
+      ko: { loading:'폼을 불러오는 중입니다.', formTitle:'캠페인 수집 폼', submit:'제출', submitting:'제출 중...', preview:'미리보기', previewBar:'미리보기 모드입니다. 실제 제출은 비활성화되어 있습니다.', empty:'표시할 입력 항목이 없습니다.', selectChannel:'채널을 선택하세요', selectNationality:'국적을 선택하세요', selectGender:'성별을 선택하세요', male:'남', female:'여', required:'항목을 입력하세요.', loadError:'폼을 불러오지 못했습니다.', submitError:'제출에 실패했습니다.', serverError:'서버 오류가 발생했습니다.', complete:'제출 완료', success:'제출되었습니다.' },
+      th: { loading:'กำลังโหลดแบบฟอร์ม', formTitle:'แบบฟอร์มแคมเปญ', submit:'ส่ง', submitting:'กำลังส่ง...', preview:'ดูตัวอย่าง', previewBar:'โหมดดูตัวอย่าง ไม่สามารถส่งข้อมูลจริงได้', empty:'ไม่มีช่องข้อมูลที่จะแสดง', selectChannel:'เลือกช่องทาง', selectNationality:'เลือกสัญชาติ', selectGender:'เลือกเพศ', male:'ชาย', female:'หญิง', required:'กรุณากรอกข้อมูลในช่องนี้', loadError:'ไม่สามารถโหลดแบบฟอร์มได้', submitError:'ส่งข้อมูลไม่สำเร็จ', serverError:'เกิดข้อผิดพลาดของเซิร์ฟเวอร์', complete:'ส่งข้อมูลเรียบร้อย', success:'ส่งข้อมูลเรียบร้อยแล้ว' },
+      vi: { loading:'Đang tải biểu mẫu', formTitle:'Biểu mẫu chiến dịch', submit:'Gửi', submitting:'Đang gửi...', preview:'Xem trước', previewBar:'Đây là chế độ xem trước. Chức năng gửi đã bị vô hiệu hóa.', empty:'Không có trường nhập liệu để hiển thị.', selectChannel:'Chọn kênh', selectNationality:'Chọn quốc tịch', selectGender:'Chọn giới tính', male:'Nam', female:'Nữ', required:'Vui lòng nhập trường này.', loadError:'Không thể tải biểu mẫu.', submitError:'Không thể gửi dữ liệu.', serverError:'Đã xảy ra lỗi máy chủ.', complete:'Hoàn tất gửi', success:'Đã gửi thành công.' },
+      ar: { loading:'جارٍ تحميل النموذج', formTitle:'نموذج الحملة', submit:'إرسال', submitting:'جارٍ الإرسال...', preview:'معاينة', previewBar:'هذا وضع المعاينة. تم تعطيل الإرسال الفعلي.', empty:'لا توجد حقول إدخال لعرضها.', selectChannel:'اختر القناة', selectNationality:'اختر الجنسية', selectGender:'اختر الجنس', male:'ذكر', female:'أنثى', required:'يرجى تعبئة هذا الحقل.', loadError:'تعذر تحميل النموذج.', submitError:'تعذر إرسال البيانات.', serverError:'حدث خطأ في الخادم.', complete:'اكتمل الإرسال', success:'تم الإرسال بنجاح.' },
+      en: { loading:'Loading form...', formTitle:'Campaign Form', submit:'Submit', submitting:'Submitting...', preview:'Preview', previewBar:'Preview mode. Actual submission is disabled.', empty:'There are no fields to display.', selectChannel:'Select a channel', selectNationality:'Select a nationality', selectGender:'Select gender', male:'Male', female:'Female', required:'Please complete this field.', loadError:'Unable to load the form.', submitError:'Submission failed.', serverError:'A server error occurred.', complete:'Submission complete', success:'Submitted successfully.' },
+      zh: { loading:'正在加载表单', formTitle:'活动表单', submit:'提交', submitting:'正在提交...', preview:'预览', previewBar:'当前为预览模式，无法实际提交。', empty:'没有可显示的输入项目。', selectChannel:'请选择渠道', selectNationality:'请选择国籍', selectGender:'请选择性别', male:'男', female:'女', required:'请填写此项。', loadError:'无法加载表单。', submitError:'提交失败。', serverError:'服务器发生错误。', complete:'提交完成', success:'提交成功。' },
+      ja: { loading:'フォームを読み込んでいます', formTitle:'キャンペーンフォーム', submit:'送信', submitting:'送信中...', preview:'プレビュー', previewBar:'プレビューモードです。実際の送信は無効です。', empty:'表示する入力項目がありません。', selectChannel:'チャネルを選択してください', selectNationality:'国籍を選択してください', selectGender:'性別を選択してください', male:'男性', female:'女性', required:'この項目を入力してください。', loadError:'フォームを読み込めませんでした。', submitError:'送信できませんでした。', serverError:'サーバーエラーが発生しました。', complete:'送信完了', success:'送信しました。' },
+    };
+    const FIELD_LABELS = {
+      ko: { user_id:'ID',hospital_patient_id:'병원ID(환자일련번호)',nationality:'국적',channel:'채널',name:'이름',pronunciation_ko:'이름(한국어 발음)',nickname:'닉네임',gender:'성별',birth_ym:'생년월',birth_ymd:'생년월일',referrer_name:'추천인 이름',referrer_email:'추천인 이메일',mobile:'모바일폰',phone:'전화',email:'이메일',address:'주소',job:'직업',company:'소속',postal_code:'우편번호',sns:'SNS',payment_method:'결제수단',payment_amount:'결제금액' },
+      th: { user_id:'รหัสผู้ใช้',hospital_patient_id:'รหัสผู้ป่วยของโรงพยาบาล',nationality:'สัญชาติ',channel:'ช่องทาง',name:'ชื่อ',pronunciation_ko:'การออกเสียงชื่อเป็นภาษาเกาหลี',nickname:'ชื่อเล่น',gender:'เพศ',birth_ym:'เดือนและปีเกิด',birth_ymd:'วันเดือนปีเกิด',referrer_name:'ชื่อผู้แนะนำ',referrer_email:'อีเมลผู้แนะนำ',mobile:'โทรศัพท์มือถือ',phone:'โทรศัพท์',email:'อีเมล',address:'ที่อยู่',job:'อาชีพ',company:'บริษัท/สังกัด',postal_code:'รหัสไปรษณีย์',sns:'SNS',payment_method:'วิธีชำระเงิน',payment_amount:'จำนวนเงินที่ชำระ' },
+      vi: { user_id:'ID người dùng',hospital_patient_id:'Mã bệnh nhân',nationality:'Quốc tịch',channel:'Kênh',name:'Họ tên',pronunciation_ko:'Cách đọc tên bằng tiếng Hàn',nickname:'Biệt danh',gender:'Giới tính',birth_ym:'Tháng năm sinh',birth_ymd:'Ngày sinh',referrer_name:'Tên người giới thiệu',referrer_email:'Email người giới thiệu',mobile:'Điện thoại di động',phone:'Điện thoại',email:'Email',address:'Địa chỉ',job:'Nghề nghiệp',company:'Công ty/Đơn vị',postal_code:'Mã bưu chính',sns:'SNS',payment_method:'Phương thức thanh toán',payment_amount:'Số tiền thanh toán' },
+      ar: { user_id:'معرّف المستخدم',hospital_patient_id:'رقم المريض بالمستشفى',nationality:'الجنسية',channel:'القناة',name:'الاسم',pronunciation_ko:'نطق الاسم بالكورية',nickname:'الاسم المستعار',gender:'الجنس',birth_ym:'شهر وسنة الميلاد',birth_ymd:'تاريخ الميلاد',referrer_name:'اسم المُحيل',referrer_email:'بريد المُحيل',mobile:'الهاتف المحمول',phone:'الهاتف',email:'البريد الإلكتروني',address:'العنوان',job:'المهنة',company:'الشركة/الجهة',postal_code:'الرمز البريدي',sns:'حساب التواصل الاجتماعي',payment_method:'طريقة الدفع',payment_amount:'مبلغ الدفع' },
+      en: { user_id:'User ID',hospital_patient_id:'Hospital patient ID',nationality:'Nationality',channel:'Channel',name:'Name',pronunciation_ko:'Name pronunciation in Korean',nickname:'Nickname',gender:'Gender',birth_ym:'Birth month and year',birth_ymd:'Date of birth',referrer_name:'Referrer name',referrer_email:'Referrer email',mobile:'Mobile phone',phone:'Phone',email:'Email',address:'Address',job:'Occupation',company:'Company/Affiliation',postal_code:'Postal code',sns:'Social media',payment_method:'Payment method',payment_amount:'Payment amount' },
+      zh: { user_id:'用户ID',hospital_patient_id:'医院患者编号',nationality:'国籍',channel:'渠道',name:'姓名',pronunciation_ko:'姓名的韩语发音',nickname:'昵称',gender:'性别',birth_ym:'出生年月',birth_ymd:'出生日期',referrer_name:'推荐人姓名',referrer_email:'推荐人邮箱',mobile:'手机号码',phone:'电话号码',email:'电子邮箱',address:'地址',job:'职业',company:'公司/所属机构',postal_code:'邮政编码',sns:'社交媒体',payment_method:'付款方式',payment_amount:'付款金额' },
+      ja: { user_id:'ユーザーID',hospital_patient_id:'病院患者ID',nationality:'国籍',channel:'チャネル',name:'氏名',pronunciation_ko:'氏名の韓国語読み',nickname:'ニックネーム',gender:'性別',birth_ym:'生年月',birth_ymd:'生年月日',referrer_name:'紹介者名',referrer_email:'紹介者メール',mobile:'携帯電話',phone:'電話番号',email:'メール',address:'住所',job:'職業',company:'会社・所属',postal_code:'郵便番号',sns:'SNS',payment_method:'支払方法',payment_amount:'支払金額' },
+    };
+    const NATIONALITY_LABELS = {
+      ko: ['일본','중국','베트남','태국','북미','중동','기타'],
+      th: ['ญี่ปุ่น','จีน','เวียดนาม','ไทย','อเมริกาเหนือ','ตะวันออกกลาง','อื่น ๆ'],
+      vi: ['Nhật Bản','Trung Quốc','Việt Nam','Thái Lan','Bắc Mỹ','Trung Đông','Khác'],
+      ar: ['اليابان','الصين','فيتنام','تايلاند','أمريكا الشمالية','الشرق الأوسط','أخرى'],
+      en: ['Japan','China','Vietnam','Thailand','North America','Middle East','Other'],
+      zh: ['日本','中国','越南','泰国','北美','中东','其他'],
+      ja: ['日本','中国','ベトナム','タイ','北米','中東','その他'],
+    };
+    function t(key) { return (UI[locale] || UI.en)[key] || UI.en[key] || key; }
+    function chooseLocale(enabled) {
+      const allowed = new Set((enabled || []).filter((v) => SUPPORTED_LANGUAGES.includes(v)));
+      const requested = new URLSearchParams(location.search).get('lang')?.toLowerCase().split('-')[0];
+      if (requested && allowed.has(requested)) return requested;
+      const browser = (navigator.languages?.length ? navigator.languages : [navigator.language || 'en'])
+        .map((v) => String(v).toLowerCase().split('-')[0]);
+      return browser.find((v) => allowed.has(v)) || 'en';
+    }
+    function applyLocale() {
+      document.documentElement.lang = locale;
+      document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
+      document.title = t('formTitle');
+      submitBtn.textContent = previewMode ? t('preview') : t('submit');
+    }
 
     function esc(v) {
       return String(v || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -170,7 +214,7 @@
       if (!key) return true;
       const required = el.required;
       if (required && !String(el.value || '').trim()) {
-        if (notify) setFieldError(el, `${el.dataset.label || '필수'} 항목을 입력하세요.`);
+        if (notify) setFieldError(el, `${el.dataset.label || ''} ${t('required')}`.trim());
         return false;
       }
       const rule = FIELD_RULES[key];
@@ -231,7 +275,7 @@
       const visible = fields.filter((f) => !f.hidden);
       const hidden = fields.filter((f) => f.hidden);
       const parts = [];
-      if (previewMode) parts.push('<div class="preview-bar">미리보기 모드입니다. 실제 제출은 비활성화되어 있습니다.</div>');
+      if (previewMode) parts.push(`<div class="preview-bar">${esc(t('previewBar'))}</div>`);
       hidden.forEach((f) => {
         parts.push(`<input type="hidden" name="${esc(f.key)}" value="${esc(f.defaultValue)}">`);
       });
@@ -251,7 +295,7 @@
         `);
       }
       if (!visible.length) {
-        parts.push('<div class="empty-state">표시할 입력 항목이 없습니다.</div>');
+        parts.push(`<div class="empty-state">${esc(t('empty'))}</div>`);
       }
       visible.forEach((f) => {
         const required = f.required ? ' required' : '';
@@ -262,7 +306,7 @@
             <div class="form-group">
               <label class="form-label" for="cf_${esc(f.key)}">${esc(f.label)}${reqMark}</label>
               <select class="form-control" id="cf_${esc(f.key)}" name="${esc(f.key)}" data-key="${esc(f.key)}" data-label="${esc(f.label)}"${required}>
-                <option value="">${esc(f.placeholder || '채널을 선택하세요')}</option>
+                <option value="">${esc(f.placeholder || t('selectChannel'))}</option>
                 ${options.map((key) => `<option value="${esc(key)}">${esc(channelLabel(key))}</option>`).join('')}
               </select>
               <div class="field-error" id="cf_${esc(f.key)}_err"></div>
@@ -275,8 +319,8 @@
             <div class="form-group">
               <label class="form-label" for="cf_${esc(f.key)}">${esc(f.label)}${reqMark}</label>
               <select class="form-control" id="cf_${esc(f.key)}" name="${esc(f.key)}" data-key="${esc(f.key)}" data-label="${esc(f.label)}"${required}>
-                <option value="">${esc(f.placeholder || '국적을 선택하세요')}</option>
-                ${NATIONALITIES.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join('')}
+                <option value="">${esc(f.placeholder || t('selectNationality'))}</option>
+                ${NATIONALITIES.map((v, i) => `<option value="${esc(v)}">${esc((NATIONALITY_LABELS[locale] || NATIONALITY_LABELS.en)[i])}</option>`).join('')}
               </select>
               <div class="field-error" id="cf_${esc(f.key)}_err"></div>
             </div>
@@ -288,9 +332,9 @@
             <div class="form-group">
               <label class="form-label" for="cf_${esc(f.key)}">${esc(f.label)}${reqMark}</label>
               <select class="form-control" id="cf_${esc(f.key)}" name="${esc(f.key)}" data-key="${esc(f.key)}" data-label="${esc(f.label)}"${required}>
-                <option value="">${esc(f.placeholder || '성별을 선택하세요')}</option>
-                <option value="M">남</option>
-                <option value="F">여</option>
+                <option value="">${esc(f.placeholder || t('selectGender'))}</option>
+                <option value="M">${esc(t('male'))}</option>
+                <option value="F">${esc(t('female'))}</option>
               </select>
               <div class="field-error" id="cf_${esc(f.key)}_err"></div>
             </div>
@@ -312,18 +356,24 @@
 
     async function loadForm() {
       try {
-        const res = await fetch(`/api/campaigns/form/${encodeURIComponent(campaignId)}`);
+        const browserLanguages = (navigator.languages?.length ? navigator.languages : [navigator.language || 'en'])
+          .map(value => String(value).toLowerCase().split('-')[0]).join(',');
+        const requestedLanguage = new URLSearchParams(location.search).get('lang') || browserLanguages;
+        const res = await fetch(`/api/campaigns/form/${encodeURIComponent(campaignId)}?lang=${encodeURIComponent(requestedLanguage)}`);
         const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.error || '폼을 불러오지 못했습니다.');
-        document.getElementById('title').textContent = data.data.campaign_name || '캠페인 수집 폼';
+        if (!res.ok || !data.ok) throw new Error(data.error || t('loadError'));
+        locale = chooseLocale(data.data.supported_languages);
+        applyLocale();
+        data.data.fields = (data.data.fields || []).map((f) => ({ ...f, label: FIELD_LABELS[locale]?.[f.key] || FIELD_LABELS.en[f.key] || f.label }));
+        document.getElementById('title').textContent = data.data.campaign_name || t('formTitle');
         document.getElementById('description').textContent = data.data.description || '';
         renderFields(data.data.fields || []);
         if (previewMode) {
           submitBtn.disabled = true;
-          submitBtn.textContent = '미리보기';
+          submitBtn.textContent = t('preview');
         }
       } catch (err) {
-        fieldHost.innerHTML = `<div class="empty-state">${esc(err.message || '폼을 불러오지 못했습니다.')}</div>`;
+        fieldHost.innerHTML = `<div class="empty-state">${esc(err.message || t('loadError'))}</div>`;
         submitBtn.disabled = true;
       }
     }
@@ -342,7 +392,7 @@
         if (payload[key] != null) payload[key] = String(payload[key]).trim();
       });
       submitBtn.disabled = true;
-      submitBtn.textContent = '제출 중...';
+      submitBtn.textContent = t('submitting');
       try {
         const res = await fetch(`/api/campaigns/form/${encodeURIComponent(campaignId)}`, {
           method: 'POST',
@@ -350,14 +400,14 @@
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        if (!res.ok || !data.ok) return MxAlert.error(data.error || '제출에 실패했습니다.');
-        await MxAlert.alert(data.message || '제출되었습니다.', { title: '제출 완료' });
+        if (!res.ok || !data.ok) return MxAlert.error(locale === 'ko' && data.error ? data.error : t('submitError'));
+        await MxAlert.alert(locale === 'ko' && data.message ? data.message : t('success'), { title: t('complete') });
         form.reset();
       } catch {
-        MxAlert.error('서버 오류가 발생했습니다.');
+        MxAlert.error(t('serverError'));
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = '제출';
+        submitBtn.textContent = t('submit');
       }
     });
 

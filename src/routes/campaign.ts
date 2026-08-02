@@ -8,12 +8,22 @@ import { requireAdvertiser } from '../middleware/auth';
 import { uploadAdFiles } from '../middleware/upload';
 import { sendEmail } from '../services/email.service';
 import { calculateFee, adTypeLabel, backupCampaignFiles, buildQuotationVars } from '../services/campaign.service';
+import { translate } from '../services/llm.service';
 import { generateCampaignId } from '../utils/id-generator';
 
 const router = Router();
 
 const ALLOWED_COLLECT = ['channel','name','nickname','gender','birth_ym','birth_ymd','mobile','phone','email','address','job','company','postal_code','sns','user_id','nationality','referrer_name','referrer_email','payment_method','payment_amount','pronunciation_ko','hospital_patient_id'];
 const ALLOWED_CHANNELS = ['facebook', 'x', 'line', 'instagram', 'tiktok'];
+const ALLOWED_FORM_LANGUAGES = ['ko', 'th', 'vi', 'ar', 'en', 'zh', 'ja'];
+const LOCALIZED_UPLOAD_FIELDS = [
+  { name: 'image_file', maxCount: 1 },
+  { name: 'html_file', maxCount: 1 },
+  ...ALLOWED_FORM_LANGUAGES.flatMap((lang) => [
+    { name: `lang_image_file_${lang}`, maxCount: 1 },
+    { name: `lang_html_file_${lang}`, maxCount: 1 },
+  ]),
+];
 const ALLOWED_NATIONALITIES = ['KR', 'CN', 'JP', 'US', 'VN', 'th', '한국', '중국', '일본', '미국', '베트남', '태국', '북미', '중동', '기타'];
 const COLLECT_LABELS: Record<string, string> = {
   user_id: 'ID',
@@ -63,9 +73,40 @@ function normalizeChannels(raw: any): string[] {
     .filter((s: string, idx: number, arr: string[]) => ALLOWED_CHANNELS.includes(s) && arr.indexOf(s) === idx);
 }
 
+function normalizeFormLanguages(raw: any): string[] {
+  const values = (Array.isArray(raw) ? raw : (raw ? [raw] : []))
+    .flatMap((v: any) => String(v).split(','))
+    .map((s: string) => s.trim().toLowerCase().split('-')[0])
+    .filter((s: string, idx: number, arr: string[]) => ALLOWED_FORM_LANGUAGES.includes(s) && arr.indexOf(s) === idx);
+  return Array.from(new Set(['ko', ...values, 'en']));
+}
+
+function normalizeLocalizedText(body: any, languages: string[]): Record<string, { campaign_name: string; description: string }> {
+  const result: Record<string, { campaign_name: string; description: string }> = {};
+  for (const lang of languages) {
+    const campaignName = String(body[`lang_campaign_name_${lang}`] || '').trim();
+    const description = String(body[`lang_campaign_description_${lang}`] || '').trim();
+    if (campaignName || description) result[lang] = { campaign_name: campaignName, description };
+  }
+  return result;
+}
+
+function localizedCampaignText(campaign: any, options: Record<string, any>, requested: any) {
+  const localized = options.__localizedText || {};
+  const requestedLanguages = String(requested || '').split(',').map(value => value.trim().toLowerCase().split('-')[0]).filter(Boolean);
+  const lang = requestedLanguages.find(value => localized[value]) || 'en';
+  const chosen = localized[lang] || localized.en || localized.ko || {};
+  return {
+    lang: localized[lang] ? lang : (localized.en ? 'en' : 'ko'),
+    campaign_name: chosen.campaign_name || campaign.campaign_name,
+    description: chosen.description || campaign.description || '',
+  };
+}
+
 function normalizeCollectOptions(body: any, selected: string[]): Record<string, any> {
   const options: Record<string, any> = {
     __successMessage: String(body.collect_success_message || '').slice(0, 500),
+    __languages: normalizeFormLanguages(body.supported_languages),
   };
   for (const key of selected) {
     const defaultValue = key === 'channel'
@@ -94,6 +135,41 @@ function parseCollectOptions(raw: any): Record<string, any> {
 
 function hasChannelOption(options: Record<string, any>): boolean {
   return normalizeChannels(options.channel?.defaultValue).length > 0;
+}
+
+function localizedAssetsFromRequest(
+  body: any,
+  files: { [fieldname: string]: Express.Multer.File[] },
+  campaignDir: string,
+  advertiserId: any,
+  campaignId: string,
+  languages: string[],
+  existing: Record<string, any> = {},
+): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const lang of languages) {
+    const previous = existing[lang] && typeof existing[lang] === 'object' ? existing[lang] : {};
+    const imageFile = files?.[`lang_image_file_${lang}`]?.[0];
+    const htmlFile = files?.[`lang_html_file_${lang}`]?.[0];
+    let imageUrl = String(body[`lang_image_url_${lang}`] || '').trim() || previous.image_url || '';
+    let htmlUrl = String(body[`lang_html_url_${lang}`] || '').trim() || previous.html_url || '';
+    if (imageFile) {
+      fs.renameSync(imageFile.path, path.join(campaignDir, imageFile.filename));
+      imageUrl = `/uploads/active/${advertiserId}/${campaignId}/${imageFile.filename}`;
+    }
+    if (htmlFile) {
+      fs.renameSync(htmlFile.path, path.join(campaignDir, htmlFile.filename));
+      htmlUrl = `/uploads/active/${advertiserId}/${campaignId}/${htmlFile.filename}`;
+    }
+    result[lang] = {
+      image_url: imageUrl,
+      image_filename: imageFile?.originalname || previous.image_filename || '',
+      html_url: htmlUrl,
+      html_filename: htmlFile?.originalname || previous.html_filename || '',
+      youtube_url: String(body[`lang_youtube_url_${lang}`] || '').trim() || previous.youtube_url || '',
+    };
+  }
+  return result;
 }
 
 function digitsOnly(v: any): string {
@@ -200,6 +276,34 @@ router.get('/', requireAdvertiser, async (req: Request, res: Response) => {
   res.json({ ok: true, data: rows, total, page: pageNum, size: pageSize });
 });
 
+router.post('/translate', requireAdvertiser, async (req: Request, res: Response) => {
+  const advertiser = (req.session as any).advertiser;
+  const user = (req.session as any).user || {};
+  const campaignName = String(req.body.campaign_name || '').trim();
+  const description = String(req.body.description || '').trim();
+  const languages = normalizeFormLanguages(req.body.languages);
+  if (!campaignName || !description) return res.status(400).json({ error: '한국어 캠페인명과 캠페인 설명을 입력하세요.' });
+  if (!/[가-힣]/.test(`${campaignName} ${description}`)) return res.status(400).json({ error: '캠페인명과 설명은 한국어로 작성하세요.' });
+
+  const translations: Record<string, any> = {
+    ko: { campaign_name: campaignName, description },
+  };
+  for (const lang of languages.filter(lang => lang !== 'ko')) {
+    const ctx = { advertiserId: advertiser.id, actorType: user.role || 'advertiser', actorId: user.id || advertiser.id } as any;
+    const [nameResult, descriptionResult] = await Promise.all([
+      translate(campaignName, lang, ctx),
+      translate(description, lang, ctx),
+    ]);
+    translations[lang] = {
+      campaign_name: nameResult.translatedText || '',
+      description: descriptionResult.translatedText || '',
+    };
+  }
+  const failed = languages.find(lang => lang !== 'ko' && (!translations[lang]?.campaign_name || !translations[lang]?.description));
+  if (failed) return res.status(502).json({ error: `${failed} 번역을 생성하지 못했습니다. ANTHROPIC_API_KEY와 모델 설정을 확인하세요.` });
+  res.json({ ok: true, data: translations });
+});
+
 // 캠페인 상세 (캠페인 ID 패턴: yymmdd_NNNN)
 router.get('/:id(\\d{6}_\\d{4})', requireAdvertiser, async (req: Request, res: Response) => {
   const adv = (req.session as any).advertiser;
@@ -213,10 +317,7 @@ router.get('/:id(\\d{6}_\\d{4})', requireAdvertiser, async (req: Request, res: R
 
 // 캠페인 등록
 router.post('/', requireAdvertiser,
-  uploadAdFiles.fields([
-    { name: 'image_file', maxCount: 1 },
-    { name: 'html_file',  maxCount: 1 },
-  ]),
+  uploadAdFiles.fields(LOCALIZED_UPLOAD_FIELDS),
   async (req: Request, res: Response) => {
     const adv = (req.session as any).advertiser;
     const {
@@ -241,7 +342,6 @@ router.post('/', requireAdvertiser,
     if (collectList.includes('channel') && !hasChannelOption(collectOptions)) {
       return res.status(400).json({ error: '채널 수집항목은 Facebook, X, LINE, Instagram 중 1개 이상 선택하세요.' });
     }
-    const collectItemOptions = JSON.stringify(collectOptions);
 
     const ALLOWED_SNS = ['instagram','x','tiktok','line'];
     const normSns = (raw: any) =>
@@ -261,27 +361,31 @@ router.post('/', requireAdvertiser,
       return res.status(400).json({ error: '종료일은 시작일보다 이후여야 합니다.' });
     }
 
+    const formLanguages = normalizeFormLanguages(req.body.supported_languages);
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const hasLocalizedImage = formLanguages.some(lang => !!String(req.body[`lang_image_url_${lang}`] || '').trim() || !!files?.[`lang_image_file_${lang}`]?.[0]);
+    const hasLocalizedHtml = formLanguages.some(lang => !!String(req.body[`lang_html_url_${lang}`] || '').trim() || !!files?.[`lang_html_file_${lang}`]?.[0]);
+    const hasLocalizedYoutube = formLanguages.some(lang => !!String(req.body[`lang_youtube_url_${lang}`] || '').trim());
     const adTypes = {
-      hasImage:   !!has_image,
-      hasHtml:    !!has_html,
-      hasYoutube: !!has_youtube,
+      hasImage:   !!has_image || hasLocalizedImage,
+      hasHtml:    !!has_html || hasLocalizedHtml,
+      hasYoutube: !!has_youtube || hasLocalizedYoutube,
     };
     if (!adTypes.hasImage && !adTypes.hasHtml && !adTypes.hasYoutube) {
       return res.status(400).json({ error: '광고물 유형을 하나 이상 선택하세요.' });
     }
 
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     const imageFile   = files?.image_file?.[0];
     const htmlFile    = files?.html_file?.[0];
 
     // 광고물 검증
-    if (adTypes.hasImage && !image_url && !imageFile) {
+    if (!!has_image && !image_url && !imageFile) {
       return res.status(400).json({ error: '이미지 URL 또는 파일을 입력하세요.' });
     }
-    if (adTypes.hasHtml && !html_url && !htmlFile) {
+    if (!!has_html && !html_url && !htmlFile) {
       return res.status(400).json({ error: 'HTML URL 또는 파일을 입력하세요.' });
     }
-    if (adTypes.hasYoutube && !youtube_url) {
+    if (!!has_youtube && !youtube_url) {
       return res.status(400).json({ error: 'YouTube URL을 입력하세요.' });
     }
 
@@ -294,6 +398,7 @@ router.post('/', requireAdvertiser,
     let htmlPath  = null, htmlFilename  = null;
     let finalImageUrl = image_url || null;
     let finalHtmlUrl  = html_url  || null;
+    let finalYoutubeUrl = youtube_url || null;
 
     const campaignDir = path.join(process.cwd(), 'uploads', 'active', String(adv.id), campaignId);
     fs.mkdirSync(campaignDir, { recursive: true });
@@ -312,6 +417,19 @@ router.post('/', requireAdvertiser,
       htmlFilename = htmlFile.originalname;
       finalHtmlUrl = `/uploads/active/${adv.id}/${campaignId}/${htmlFile.filename}`;
     }
+    collectOptions.__localizedAssets = localizedAssetsFromRequest(
+      req.body, files, campaignDir, adv.id, campaignId, formLanguages,
+    );
+    collectOptions.__localizedText = normalizeLocalizedText(req.body, formLanguages);
+    collectOptions.__localizedText.ko = { campaign_name: String(campaign_name).trim(), description: String(description || '').trim() };
+    const localizedValues = Object.values(collectOptions.__localizedAssets) as any[];
+    const fallbackImage = localizedValues.find(asset => asset.image_url);
+    const fallbackHtml = localizedValues.find(asset => asset.html_url);
+    const fallbackYoutube = localizedValues.find(asset => asset.youtube_url);
+    if (!finalImageUrl && fallbackImage) { finalImageUrl = fallbackImage.image_url; imageFilename = fallbackImage.image_filename || null; }
+    if (!finalHtmlUrl && fallbackHtml) { finalHtmlUrl = fallbackHtml.html_url; htmlFilename = fallbackHtml.html_filename || null; }
+    if (!finalYoutubeUrl && fallbackYoutube) finalYoutubeUrl = fallbackYoutube.youtube_url;
+    const collectItemOptions = JSON.stringify(collectOptions);
 
     const imgW = image_width  ? parseInt(String(image_width))  : null;
     const imgH = image_height ? parseInt(String(image_height)) : null;
@@ -332,7 +450,7 @@ router.post('/', requireAdvertiser,
         adTypes.hasImage ? 1 : 0, adTypes.hasHtml ? 1 : 0, adTypes.hasYoutube ? 1 : 0,
         finalImageUrl, imagePath, imageFilename, imgW, imgH,
         finalHtmlUrl, htmlPath, htmlFilename,
-        youtube_url || null, from_date, to_date,
+        finalYoutubeUrl, from_date, to_date,
         adDays, 0, 0, 0, null, collectCsv, collectItemOptions,
         adTypes.hasImage ? imageSnsCsv : '', adTypes.hasHtml ? htmlSnsCsv : '', adTypes.hasYoutube ? youtubeSnsCsv : '',
       ]
@@ -344,10 +462,7 @@ router.post('/', requireAdvertiser,
 
 // 캠페인 수정
 router.put('/:id(\\d{6}_\\d{4})', requireAdvertiser,
-  uploadAdFiles.fields([
-    { name: 'image_file', maxCount: 1 },
-    { name: 'html_file',  maxCount: 1 },
-  ]),
+  uploadAdFiles.fields(LOCALIZED_UPLOAD_FIELDS),
   async (req: Request, res: Response) => {
     const adv = (req.session as any).advertiser;
     const [rows] = await pool.execute<any[]>(
@@ -390,7 +505,6 @@ router.put('/:id(\\d{6}_\\d{4})', requireAdvertiser,
     if (collectList.includes('channel') && !hasChannelOption(collectOptions)) {
       return res.status(400).json({ error: '채널 수집항목은 Facebook, X, LINE, Instagram 중 1개 이상 선택하세요.' });
     }
-    const collectItemOptions = JSON.stringify(collectOptions);
 
     const ALLOWED_SNS_PUT = ['instagram','x','tiktok','line'];
     const normSnsPut = (raw: any) =>
@@ -404,9 +518,6 @@ router.put('/:id(\\d{6}_\\d{4})', requireAdvertiser,
     const youtubeSnsCsv = normSnsPut(req.body.youtube_sns);
 
     const adTypes = { hasImage: !!has_image, hasHtml: !!has_html, hasYoutube: !!has_youtube };
-    if (!adTypes.hasImage && !adTypes.hasHtml && !adTypes.hasYoutube) {
-      return res.status(400).json({ error: '광고물 유형을 하나 이상 선택하세요.' });
-    }
 
     // 견적(fee) 기능 제거 — 광고일수만 보존
     const adDays = Math.max(1, Math.round((new Date(to_date).getTime() - new Date(from_date).getTime()) / 86400000) + 1);
@@ -426,6 +537,7 @@ router.put('/:id(\\d{6}_\\d{4})', requireAdvertiser,
     let finalHtmlUrl  = html_url  || existing.html_url;
     let htmlPath      = existing.html_path;
     let htmlFilename  = existing.html_filename;
+    let finalYoutubeUrl = youtube_url || existing.youtube_url;
 
     if (imageFile) {
       const dest = path.join(campaignDir, imageFile.filename);
@@ -441,6 +553,25 @@ router.put('/:id(\\d{6}_\\d{4})', requireAdvertiser,
       htmlFilename = htmlFile.originalname;
       finalHtmlUrl = `/uploads/active/${adv.id}/${existing.id}/${htmlFile.filename}`;
     }
+    const previousOptions = parseCollectOptions(existing.collect_item_options);
+    const formLanguages = normalizeFormLanguages(req.body.supported_languages);
+    collectOptions.__localizedAssets = localizedAssetsFromRequest(
+      req.body, files, campaignDir, adv.id, existing.id, formLanguages, previousOptions.__localizedAssets || {},
+    );
+    collectOptions.__localizedText = normalizeLocalizedText(req.body, formLanguages);
+    collectOptions.__localizedText.ko = { campaign_name: String(campaign_name).trim(), description: String(description || '').trim() };
+    const localizedValues = Object.values(collectOptions.__localizedAssets) as any[];
+    adTypes.hasImage = adTypes.hasImage || localizedValues.some(asset => !!asset.image_url);
+    adTypes.hasHtml = adTypes.hasHtml || localizedValues.some(asset => !!asset.html_url);
+    adTypes.hasYoutube = adTypes.hasYoutube || localizedValues.some(asset => !!asset.youtube_url);
+    if (!adTypes.hasImage && !adTypes.hasHtml && !adTypes.hasYoutube) return res.status(400).json({ error: '지원 언어 중 하나 이상에 광고물을 등록하세요.' });
+    const fallbackImage = localizedValues.find(asset => asset.image_url);
+    const fallbackHtml = localizedValues.find(asset => asset.html_url);
+    const fallbackYoutube = localizedValues.find(asset => asset.youtube_url);
+    if (!finalImageUrl && fallbackImage) { finalImageUrl = fallbackImage.image_url; imageFilename = fallbackImage.image_filename || null; }
+    if (!finalHtmlUrl && fallbackHtml) { finalHtmlUrl = fallbackHtml.html_url; htmlFilename = fallbackHtml.html_filename || null; }
+    if (!finalYoutubeUrl && fallbackYoutube) finalYoutubeUrl = fallbackYoutube.youtube_url;
+    const collectItemOptions = JSON.stringify(collectOptions);
 
     await pool.execute(
       `UPDATE campaigns SET
@@ -458,7 +589,7 @@ router.put('/:id(\\d{6}_\\d{4})', requireAdvertiser,
         adTypes.hasImage ? 1 : 0, adTypes.hasHtml ? 1 : 0, adTypes.hasYoutube ? 1 : 0,
         finalImageUrl, imagePath, imageFilename, imgW, imgH,
         finalHtmlUrl, htmlPath, htmlFilename,
-        youtube_url || null, from_date, to_date,
+        finalYoutubeUrl, from_date, to_date,
         adDays,
         collectCsv, collectItemOptions,
         adTypes.hasImage ? imageSnsCsv : '', adTypes.hasHtml ? htmlSnsCsv : '', adTypes.hasYoutube ? youtubeSnsCsv : '',
@@ -578,22 +709,32 @@ router.get('/excel/download', requireAdvertiser, async (req: Request, res: Respo
 // GET /api/campaigns/image-page/:campaign_id
 router.get('/image-page/:campaign_id', async (req: Request, res: Response) => {
   const [rows] = await pool.execute<any[]>(
-    `SELECT id, campaign_name, description, image_url, status
+    `SELECT id, campaign_name, description, image_url, html_url, youtube_url, collect_item_options, status
        FROM campaigns
-      WHERE id = ? AND has_image = 1`,
+      WHERE id = ?`,
     [req.params.campaign_id]
   );
-  if (!rows.length || !rows[0].image_url) return res.status(404).json({ error: 'campaign_image_not_found' });
+  if (!rows.length) return res.status(404).json({ error: 'campaign_image_not_found' });
   const campaign = rows[0];
+  const options = parseCollectOptions(campaign.collect_item_options);
+  const localizedText = localizedCampaignText(campaign, options, req.query.lang);
+  const requestedLang = localizedText.lang;
+  const localized = options.__localizedAssets?.[requestedLang] || {};
+  const imageUrl = localized.image_url || campaign.image_url;
+  const htmlUrl = localized.html_url || campaign.html_url;
+  const youtubeUrl = localized.youtube_url || campaign.youtube_url;
+  if (!imageUrl && !htmlUrl && !youtubeUrl) return res.status(404).json({ error: 'campaign_asset_not_found' });
   res.json({
     ok: true,
     data: {
       id: campaign.id,
-      campaign_name: campaign.campaign_name,
-      description: campaign.description || '',
-      image_url: campaign.image_url,
+      campaign_name: localizedText.campaign_name,
+      description: localizedText.description,
+      image_url: imageUrl,
+      html_url: htmlUrl,
+      youtube_url: youtubeUrl,
       status: campaign.status,
-      form_url: `/campaign-form/${campaign.id}`,
+      form_url: `/campaign-form/${campaign.id}${requestedLang ? `?lang=${encodeURIComponent(requestedLang)}` : ''}`,
     },
   });
 });
@@ -609,14 +750,16 @@ router.get('/form/:campaign_id', async (req: Request, res: Response) => {
   const campaign = rows[0];
   const items = normalizeCollectItems(campaign.collect_items);
   const options = parseCollectOptions(campaign.collect_item_options);
+  const localizedText = localizedCampaignText(campaign, options, req.query.lang);
   res.json({
     ok: true,
     data: {
       id: campaign.id,
-      campaign_name: campaign.campaign_name,
-      description: campaign.description || '',
+      campaign_name: localizedText.campaign_name,
+      description: localizedText.description,
       status: campaign.status,
       success_message: String(options.__successMessage || ''),
+      supported_languages: normalizeFormLanguages(options.__languages),
       fields: items.map((key) => ({
         key,
         label: COLLECT_LABELS[key] || key,

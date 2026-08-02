@@ -129,6 +129,7 @@ const SQLITE_DDL = [
   `CREATE TABLE IF NOT EXISTS advertisers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     company_name TEXT NOT NULL,
+    company_name_en TEXT,
     business_no TEXT NOT NULL UNIQUE,
     ceo_name TEXT,
     address1 TEXT NOT NULL,
@@ -138,6 +139,11 @@ const SQLITE_DDL = [
     contact_mobile TEXT,
     contact_phone TEXT,
     contact_email TEXT,
+    representative_phone TEXT,
+    medical_subjects TEXT,
+    fax TEXT,
+    homepage TEXT,
+    serial_no TEXT UNIQUE,
     email_hash TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     push_consent INTEGER DEFAULT 0,
@@ -148,6 +154,8 @@ const SQLITE_DDL = [
     biz_cert_name TEXT,
     status TEXT DEFAULT 'pending',
     status_reason TEXT,
+    approved_at TEXT,
+    bank_name TEXT,
     bank_account TEXT,
     email_verified INTEGER DEFAULT 0,
     last_login_ip TEXT,
@@ -155,6 +163,69 @@ const SQLITE_DDL = [
     created_at TEXT DEFAULT (datetime('now', 'localtime')),
     updated_at TEXT DEFAULT (datetime('now', 'localtime')),
     password_reset_required INTEGER DEFAULT 0
+  )`,
+
+  // 2-a. supervisor-configurable hospital registration form
+  `CREATE TABLE IF NOT EXISTS hospital_form_fields (
+    field_key TEXT PRIMARY KEY,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    required INTEGER NOT NULL DEFAULT 0,
+    searchable INTEGER NOT NULL DEFAULT 0,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT DEFAULT (datetime('now', 'localtime'))
+  )`,
+
+  `CREATE TABLE IF NOT EXISTS agency_form_fields (
+    field_key TEXT PRIMARY KEY,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    required INTEGER NOT NULL DEFAULT 0,
+    searchable INTEGER NOT NULL DEFAULT 0,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT DEFAULT (datetime('now', 'localtime'))
+  )`,
+
+  // Hospitals are managed independently from advertiser/agency accounts.
+  `CREATE TABLE IF NOT EXISTS hospitals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_name TEXT NOT NULL,
+    company_name_en TEXT,
+    hospital_id TEXT NOT NULL UNIQUE,
+    ceo_name TEXT,
+    business_no TEXT NOT NULL UNIQUE,
+    biz_cert_path TEXT,
+    biz_cert_name TEXT,
+    representative_phone TEXT,
+    address1 TEXT,
+    address2 TEXT,
+    postal_code TEXT,
+    medical_subjects TEXT,
+    fax TEXT,
+    homepage TEXT,
+    serial_no TEXT NOT NULL UNIQUE,
+    contact_name TEXT,
+    contact_mobile TEXT,
+    contact_email TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    status_reason TEXT,
+    approved_at TEXT,
+    created_at TEXT DEFAULT (datetime('now', 'localtime')),
+    updated_at TEXT DEFAULT (datetime('now', 'localtime'))
+  )`,
+
+  `CREATE TABLE IF NOT EXISTS hospital_agency_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    hospital_id INTEGER NOT NULL,
+    advertiser_id INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    token_hash TEXT NOT NULL UNIQUE,
+    requested_by TEXT,
+    requested_at TEXT DEFAULT (datetime('now', 'localtime')),
+    responded_at TEXT,
+    created_at TEXT DEFAULT (datetime('now', 'localtime')),
+    updated_at TEXT DEFAULT (datetime('now', 'localtime')),
+    UNIQUE(hospital_id, advertiser_id),
+    FOREIGN KEY(hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE,
+    FOREIGN KEY(advertiser_id) REFERENCES advertisers(id) ON DELETE CASCADE
   )`,
 
   // 3. campaign_sequences
@@ -182,6 +253,9 @@ const SQLITE_DDL = [
     html_path TEXT,
     html_filename TEXT,
     youtube_url TEXT,
+    image_sns TEXT NOT NULL DEFAULT '',
+    html_sns TEXT NOT NULL DEFAULT '',
+    youtube_sns TEXT NOT NULL DEFAULT '',
     from_date TEXT NOT NULL,
     to_date TEXT NOT NULL,
     ad_days INTEGER DEFAULT 0,
@@ -247,6 +321,8 @@ const SQLITE_DDL = [
     advertiser_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     content TEXT,
+    supported_languages TEXT NOT NULL DEFAULT 'ko,en',
+    translations TEXT,
     is_pinned INTEGER DEFAULT 0,
     view_count INTEGER DEFAULT 0,
     is_deleted INTEGER DEFAULT 0,
@@ -503,13 +579,28 @@ const SQLITE_DDL = [
   // 21. chat_attachments
   `CREATE TABLE IF NOT EXISTS chat_attachments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    advertiser_id INTEGER NOT NULL,
     conversation_id INTEGER NOT NULL,
-    sender_type TEXT NOT NULL,
-    sender_id INTEGER,
-    file_name TEXT NOT NULL,
+    uploader_type TEXT NOT NULL,
+    uploader_id INTEGER,
     file_path TEXT NOT NULL,
-    file_size INTEGER NOT NULL,
+    original_name TEXT NOT NULL,
     mime_type TEXT,
+    size_bytes INTEGER,
+    created_at TEXT DEFAULT (datetime('now', 'localtime'))
+  )`,
+
+  `CREATE TABLE IF NOT EXISTS resource_images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    advertiser_id INTEGER NOT NULL,
+    original_name TEXT NOT NULL,
+    stored_name TEXT NOT NULL,
+    image_url TEXT NOT NULL,
+    description TEXT,
+    tags TEXT,
+    language TEXT NOT NULL DEFAULT 'en',
+    mime_type TEXT,
+    size_bytes INTEGER,
     created_at TEXT DEFAULT (datetime('now', 'localtime'))
   )`,
 
@@ -527,20 +618,23 @@ const SQLITE_DDL = [
   // 23. chat_tokens
   `CREATE TABLE IF NOT EXISTS chat_tokens (
     token VARCHAR(64) PRIMARY KEY,
+    advertiser_id INTEGER NOT NULL,
     conversation_id INTEGER NOT NULL,
-    participant_type TEXT NOT NULL,
-    participant_id INTEGER,
-    display_name TEXT,
+    customer_email TEXT NOT NULL,
     expires_at TEXT NOT NULL,
+    revoked INTEGER NOT NULL DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now', 'localtime'))
   )`,
 
   // 24. consult_credentials
   `CREATE TABLE IF NOT EXISTS consult_credentials (
-    email TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     advertiser_id INTEGER NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at TEXT DEFAULT (datetime('now', 'localtime'))
+    email TEXT NOT NULL,
+    code_hash TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now', 'localtime')),
+    updated_at TEXT DEFAULT (datetime('now', 'localtime')),
+    UNIQUE(advertiser_id, email)
   )`
 ];
 
@@ -617,6 +711,97 @@ class SqlitePool {
             console.error('[SQLite Schema Init Error]', ddl, err);
           }
         });
+      }
+      // Additive migrations for databases created by earlier versions.
+      const hospitalColumns = [
+        'representative_phone TEXT',
+        'medical_subjects TEXT',
+        'fax TEXT',
+        'homepage TEXT',
+        'serial_no TEXT',
+        'approved_at TEXT',
+      ];
+      for (const column of hospitalColumns) {
+        this.db.run(`ALTER TABLE advertisers ADD COLUMN ${column}`, (err: any) => {
+          if (err && !String(err.message).includes('duplicate column name')) {
+            console.error('[SQLite Hospital Migration Error]', column, err);
+          }
+        });
+      }
+      const campaignSnsColumns = [
+        "image_sns TEXT NOT NULL DEFAULT ''",
+        "html_sns TEXT NOT NULL DEFAULT ''",
+        "youtube_sns TEXT NOT NULL DEFAULT ''",
+      ];
+      for (const column of campaignSnsColumns) {
+        this.db.run(`ALTER TABLE campaigns ADD COLUMN ${column}`, (err: any) => {
+          if (err && !String(err.message).includes('duplicate column name')) {
+            console.error('[SQLite Campaign SNS Migration Error]', column, err);
+          }
+        });
+      }
+      const noticeLanguageColumns = [
+        "supported_languages TEXT NOT NULL DEFAULT 'ko,en'",
+        'translations TEXT',
+      ];
+      for (const column of noticeLanguageColumns) {
+        this.db.run(`ALTER TABLE notices ADD COLUMN ${column}`, (err: any) => {
+          if (err && !String(err.message).includes('duplicate column name')) {
+            console.error('[SQLite Notice Language Migration Error]', column, err);
+          }
+        });
+      }
+      this.db.run('ALTER TABLE hospitals ADD COLUMN hospital_id TEXT', (err: any) => {
+        if (err && !String(err.message).includes('duplicate column name')) {
+          console.error('[SQLite Hospital ID Migration Error]', err);
+        }
+      });
+      this.db.run('ALTER TABLE hospitals ADD COLUMN company_name_en TEXT', () => {});
+      this.db.run('ALTER TABLE advertisers ADD COLUMN company_name_en TEXT', () => {});
+      this.db.run(`UPDATE hospitals SET hospital_id=CASE WHEN company_name='모즈의원' THEN 'mods' ELSE 'hospital-' || id END WHERE hospital_id IS NULL OR hospital_id=''`);
+      this.db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_hospitals_hospital_id ON hospitals(hospital_id)');
+      this.db.run('ALTER TABLE hospital_form_fields ADD COLUMN searchable INTEGER NOT NULL DEFAULT 0', (err: any) => {
+        if (err && !String(err.message).includes('duplicate column name')) {
+          console.error('[SQLite Hospital Form Migration Error]', err);
+        }
+      });
+      this.db.run('ALTER TABLE advertisers ADD COLUMN bank_name TEXT', (err: any) => {
+        if (err && !String(err.message).includes('duplicate column name')) {
+          console.error('[SQLite Agency Migration Error]', err);
+        }
+      });
+      this.db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_advertisers_serial_no ON advertisers(serial_no)');
+      this.db.run(
+        `UPDATE advertisers SET approved_at=updated_at
+          WHERE status='approved' AND approved_at IS NULL`,
+      );
+      const defaultHospitalFields: Array<[string, number, number, number]> = [
+        ['company_name', 1, 1, 1], ['company_name_en', 1, 0, 2], ['hospital_id', 1, 1, 3], ['ceo_name', 1, 1, 4], ['business_no', 1, 1, 5],
+        ['biz_cert', 1, 0, 5], ['representative_phone', 1, 1, 6], ['address1', 1, 1, 7],
+        ['address2', 1, 0, 8], ['postal_code', 1, 1, 9], ['medical_subjects', 1, 0, 10],
+        ['fax', 1, 0, 11], ['homepage', 1, 0, 12], ['contact_name', 1, 1, 13],
+        ['contact_mobile', 1, 1, 14], ['contact_email', 1, 1, 15], ['serial_no', 1, 0, 16],
+      ];
+      for (const field of defaultHospitalFields) {
+        this.db.run(
+          'INSERT OR IGNORE INTO hospital_form_fields (field_key, enabled, required, sort_order) VALUES (?, ?, ?, ?)',
+          field,
+        );
+      }
+      const defaultAgencyFields: Array<[string, number, number, number, number]> = [
+        ['company_name', 1, 1, 1, 1], ['company_name_en', 1, 0, 1, 2], ['ceo_name', 1, 1, 0, 3],
+        ['business_no', 1, 1, 1, 3], ['biz_cert', 1, 0, 0, 4],
+        ['contact_phone', 1, 1, 0, 5], ['address1', 1, 1, 0, 6],
+        ['address2', 1, 0, 0, 7], ['postal_code', 1, 1, 0, 8],
+        ['contact_name', 1, 1, 0, 9], ['contact_mobile', 1, 1, 0, 10],
+        ['contact_email', 1, 1, 1, 11], ['bank_name', 1, 0, 1, 12],
+        ['bank_account', 1, 0, 1, 13],
+      ];
+      for (const field of defaultAgencyFields) {
+        this.db.run(
+          'INSERT OR IGNORE INTO agency_form_fields (field_key, enabled, required, searchable, sort_order) VALUES (?, ?, ?, ?, ?)',
+          field,
+        );
       }
       // 2. Run Seed Queries
       for (const seed of SQLITE_SEEDS) {

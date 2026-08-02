@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>관리자 대시보드 - 모노라마 병원 CRM 시스템</title>
+  <title>전문 외국환자관리 CRM</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="stylesheet" href="/css/common.css">
   <style>
-    .container { width: 90%; max-width: none; }
-    .header { background: #000000; border-bottom:1px solid #27272a; }
+    .container { width:90%; max-width:none; margin:26px auto; padding:0; }
+    .header { height:62px; padding:0 4%; background:#000000; border-bottom:1px solid #27272a; position:sticky; top:0; z-index:1100; box-shadow:none; }
     .header-logo { color:#ffffff; font-weight:700; display:flex; align-items:center; gap:8px; text-decoration:none; }
     .header-logo .admin-badge { background:#27272a; color:#ffffff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; border:1px solid #3f3f46; letter-spacing:0.5px; }
     .header-info { color:#a1a1aa; }
-    .tab-nav { display:flex; gap:0; border-bottom:2px solid var(--gray-200); margin-bottom:24px; }
+    .tab-nav { height:62px; display:flex; align-items:flex-end; gap:0; border-bottom:1px solid #d4d4d8; margin:0; padding:0 5%; position:sticky; top:62px; z-index:1000; background:#f6f7f9; box-shadow:0 5px 10px rgba(0,0,0,.04); }
     .tab-btn {
-      padding:12px 28px; border:none; background:none; cursor:pointer;
+      padding:18px 32px 14px; border:none; background:none; cursor:pointer;
       font-size:14px; font-weight:600; color:var(--gray-500);
-      border-bottom:3px solid transparent; margin-bottom:-2px;
-      transition:all .15s; border-radius:6px 6px 0 0;
+      border-bottom:3px solid transparent; margin-bottom:0;
+      transition:all .15s; border-radius:0;
     }
     .tab-btn:hover:not(.active) {
       color:#000000;
@@ -32,6 +32,9 @@
     }
     .tab-content { display:none; }
     .tab-content.active { display:block; }
+    .section-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:18px; }
+    .section-head h1 { margin:0 0 4px; }
+    .section-head p { margin:0; color:#71717a; font-size:12px; }
     .biz-cert-actions { display:flex; gap:6px; }
     .text-sm { font-size:12px; }
     .approve-form { display:flex; flex-direction:column; gap:10px; }
@@ -76,9 +79,9 @@
 <!-- Header -->
 <header class="header">
   <a class="header-logo" href="/supervisor/dashboard">
-    <span class="admin-badge">SUPERVISOR</span>
-    <span>모노라마 병원 CRM 시스템</span>
+    <b>SUPERVISOR　모노라마 병원 CRM 시스템</b>
   </a>
+  <strong id="topSectionTitle" style="color:#fff">캠페인관리</strong>
   <div class="header-info">
     <span class="username" id="hdrName" style="color:#f4f4f5"></span>
     <span class="last-login" id="hdrLastLogin" style="color:#a1a1aa"></span>
@@ -86,16 +89,18 @@
   </div>
 </header>
 
-<div class="container">
-  <!-- Tabs -->
-  <div class="tab-nav">
-    <button class="tab-btn active" data-tab="campaigns">캠페인 관리</button>
-    <button class="tab-btn" data-tab="advertisers">광고주 관리</button>
+<!-- Tabs -->
+<nav class="tab-nav">
+    <button class="tab-btn" data-href="/supervisor/hospitals">병원관리</button>
+    <button class="tab-btn" data-href="/supervisor/agencies">대행사관리</button>
+    <button class="tab-btn active" data-tab="campaigns">캠페인관리</button>
     <button class="tab-btn" data-tab="stats">현황</button>
-  </div>
+</nav>
 
+<div class="container">
   <!-- ── 캠페인 관리 탭 ─────────────────────────────────────── -->
   <div class="tab-content active" id="tab-campaigns">
+    <div class="section-head"><div><h1>캠페인관리</h1><p>전체 캠페인과 진행 상태를 관리합니다.</p></div></div>
     <div class="card">
       <div class="card-header">
         <span class="card-title">캠페인 목록 (전체)</span>
@@ -150,6 +155,7 @@
 
   <!-- ── 현황 탭 ──────────────────────────────────────────────── -->
   <div class="tab-content" id="tab-stats">
+    <div class="section-head"><div><h1>현황</h1><p>캠페인 상태와 매출 현황을 확인합니다.</p></div></div>
     <!-- 1. 상태별 캠페인 개수 -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><span class="card-title">캠페인 상태 현황</span></div>
@@ -299,6 +305,21 @@
   </div>
 </div>
 
+<div class="overlay" id="agencyHospitalsOverlay">
+  <div class="overlay-dialog" style="max-width:1050px">
+    <div class="overlay-header" style="justify-content:center;position:relative">
+      <span class="overlay-title" id="agencyHospitalsTitle">연계 병원 현황</span>
+      <button class="overlay-close" id="agencyHospitalsClose" style="position:absolute;right:20px">×</button>
+    </div>
+    <div class="overlay-body" style="overflow:auto">
+      <table style="min-width:850px;width:100%">
+        <thead><tr><th>병원명</th><th>사업자등록번호</th><th>일련번호</th><th>진료과목</th><th>대표전화</th><th>병원 상태</th><th>연계일</th></tr></thead>
+        <tbody id="agencyHospitalsRows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script src="/js/alert.js"></script>
 <script src="/js/session.js"></script>
 <script src="/js/grid.js"></script>
@@ -316,6 +337,10 @@
     if (!data.ok) { window.location.href = '/supervisor'; return; }
     document.getElementById('hdrName').textContent = data.user.username + ' (관리자)';
     initGrids();
+    const initialTab = new URLSearchParams(window.location.search).get('tab');
+    if (initialTab === 'stats') {
+      document.querySelector('[data-tab="stats"]').click();
+    }
   }
 
   // ── 탭 전환 ─────────────────────────────────────────────────
@@ -323,10 +348,16 @@
   let statsLoaded   = false;
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (btn.dataset.href) {
+        window.location.href = btn.dataset.href;
+        return;
+      }
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      document.getElementById('topSectionTitle').textContent =
+        btn.dataset.tab === 'stats' ? '현황' : '캠페인관리';
 
       if (btn.dataset.tab === 'advertisers' && !advGridLoaded && advGrid) {
         advGridLoaded = true;
@@ -354,6 +385,7 @@
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelector('[data-tab="campaigns"]').classList.add('active');
     document.getElementById('tab-campaigns').classList.add('active');
+    document.getElementById('topSectionTitle').textContent = '캠페인관리';
 
     // 그리드 검색
     campaignGrid.search({ advertiser, status });
@@ -500,6 +532,16 @@
       columns: [
         { key: 'company_name',   label: '회사명',       width: '160px' },
         { key: 'business_no',    label: '사업자번호',   width: '120px' },
+        { key: 'hospital_count',  label: '병원(개)',     width: '80px', align:'center',
+          render: (v, row) => `<button type="button" style="min-width:42px;padding:5px 10px;color:#2563eb;border:1px solid #93b4ff;border-radius:15px;background:#eff6ff;cursor:pointer;font-weight:700" onclick="event.stopPropagation();openAgencyHospitals(${row.id},'${String(row.company_name || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">${Number(v)||0}</button>` },
+        { key: 'terms_consent',   label: '이용약관동의', width: '105px', align:'center',
+          render: v => v ? '<span style="color:#15803d;font-weight:700">동의</span>' : '<span style="color:#71717a">미동의</span>' },
+        { key: 'privacy_consent', label: '개인정보수집이용동의', width: '145px', align:'center',
+          render: v => v ? '<span style="color:#15803d;font-weight:700">동의</span>' : '<span style="color:#71717a">미동의</span>' },
+        { key: 'push_consent',    label: '알림수신동의', width: '105px', align:'center',
+          render: v => v ? '<span style="color:#15803d;font-weight:700">동의</span>' : '<span style="color:#71717a">미동의</span>' },
+        { key: 'email_consent',   label: '이메일수신동의', width: '110px', align:'center',
+          render: v => v ? '<span style="color:#15803d;font-weight:700">동의</span>' : '<span style="color:#71717a">미동의</span>' },
         { key: 'contact_name',   label: '담당자',       width: '100px' },
         { key: 'contact_email',  label: '이메일',       width: '180px' },
         { key: 'contact_mobile', label: '연락처',       width: '130px' },
@@ -514,6 +556,39 @@
       ],
       onRowDblClick: openAdvDetail,
     });
+  }
+
+  async function openAgencyHospitals(id, companyName) {
+    document.getElementById('agencyHospitalsTitle').textContent = `${companyName} 연계 병원 현황`;
+    const body = document.getElementById('agencyHospitalsRows');
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px">병원 현황을 불러오는 중입니다...</td></tr>';
+    openOverlay('agencyHospitalsOverlay');
+    try {
+      const res = await fetch(`/api/admin/agencies/${id}/hospitals`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '병원 현황을 불러오지 못했습니다.');
+      body.innerHTML = data.data.length ? data.data.map(row => `<tr>
+        <td><b>${escapeHtml(row.company_name || '-')}</b></td>
+        <td>${escapeHtml(row.business_no || '-')}</td>
+        <td>${escapeHtml(row.serial_no || '-')}</td>
+        <td>${escapeHtml(row.medical_subjects || '-')}</td>
+        <td>${escapeHtml(row.representative_phone || '-')}</td>
+        <td><span class="badge badge-${row.status}">${statusLabel(row.status)}</span></td>
+        <td>${row.linked_at ? String(row.linked_at).split('T')[0] : '-'}</td>
+      </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:32px;color:#6b7280">관리 중인 병원이 없습니다.</td></tr>';
+    } catch (error) {
+      body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:#dc2626">${escapeHtml(error.message)}</td></tr>`;
+    }
+  }
+
+  document.getElementById('agencyHospitalsClose').addEventListener('click', () => {
+    closeOverlay('agencyHospitalsOverlay');
+  });
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[char]));
   }
 
   function statusLabel(v) {
@@ -805,7 +880,7 @@
   }
 
   async function updateAdvStatus(advId, status) {
-    const ok = await MxAlert.confirm('광고주를 승인하시겠습니까?', { type: 'success', confirmText: '승인', confirmColor: 'success' });
+    const ok = await MxAlert.confirm('광고주를 승인하시겠습니까?', { type: 'success', confirmText: '승인', confirmColor: 'black' });
     if (!ok) return;
     try {
       const res  = await fetch(`/api/admin/advertisers/${advId}/status`, {

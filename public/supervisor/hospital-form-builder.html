@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>전문 외국환자관리 CRM</title><link rel="stylesheet" href="/css/common.css"><script src="/js/alert.js"></script>
+  <style>
+    body{margin:0;background:#f4f4f5;color:#18181b;font-family:Arial,sans-serif}.top{height:62px;background:#050505;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 4%}.top a{color:#fff;text-decoration:none}.layout{width:94%;margin:24px auto;display:grid;grid-template-columns:minmax(520px,1fr) minmax(380px,.8fr);gap:20px}.card{background:#fff;border:1px solid #e4e4e7;border-radius:12px;padding:22px}.head,.actions{display:flex;justify-content:space-between;align-items:center;gap:10px}.muted{font-size:12px;color:#71717a}.field-list{display:flex;flex-direction:column;gap:8px;margin-top:18px}.field-row{display:grid;grid-template-columns:minmax(150px,1fr) 105px 105px 105px;gap:10px;align-items:center;padding:12px;border:1px solid #e4e4e7;border-radius:9px}.field-row:hover{border-color:#a1a1aa}.switch{display:flex;align-items:center;gap:6px;font-size:12px}.switch input{width:16px;height:16px}.btn{border:1px solid #d4d4d8;border-radius:8px;padding:10px 15px;background:#fff;color:#18181b;cursor:pointer;text-decoration:none}.black{background:#111;color:#fff;border-color:#111}.preview{position:sticky;top:20px}.preview-box{border:1px solid #d4d4d8;border-radius:12px;padding:20px;background:#fafafa;margin-top:15px}.preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.preview-field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}.preview-field input{width:100%;box-sizing:border-box;border:1px solid #d4d4d8;border-radius:7px;padding:9px;background:#fff}.span2{grid-column:span 2}.required{color:#dc2626}.system{font-size:10px;background:#e0e7ff;color:#3730a3;border-radius:10px;padding:2px 6px}.result{display:none;margin-top:14px;padding:13px;background:#dcfce7;border-radius:8px;color:#166534;font-size:13px}@media(max-width:950px){.layout{grid-template-columns:1fr}.preview{position:static}}@media(max-width:650px){.field-row{grid-template-columns:1fr 1fr}.preview-grid{grid-template-columns:1fr}.span2{grid-column:auto}}
+  </style>
+</head>
+<body>
+<header class="top"><a href="/supervisor/hospitals">← 병원 관리</a><strong>병원 등록폼 빌더</strong><button class="btn" id="logoutBtn">로그아웃</button></header>
+<main class="layout">
+  <section class="card">
+    <div class="head"><div><h1>등록폼 항목 설정</h1><p class="muted">병원에서 입력할 항목과 필수 여부를 선택하세요. 조회조건은 병원 관리 검색창에도 반영됩니다.</p></div></div>
+    <div class="field-row" style="font-weight:700;font-size:12px;background:#fafafa"><span>관리 항목</span><span>폼에 포함</span><span>필수 입력</span><span>조회조건</span></div>
+    <div id="fieldList" class="field-list"></div>
+    <div class="actions" style="justify-content:flex-end;margin-top:20px"><a class="btn" href="/hospital-register" target="_blank">현재 등록폼 열기</a><button class="btn black" id="publishBtn">등록폼 저장·생성</button></div>
+    <div class="result" id="result">등록폼을 생성했습니다. 공개 주소: <a href="/hospital-register" target="_blank"><b>/hospital-register</b></a></div>
+  </section>
+  <aside class="card preview">
+    <div class="head"><div><h2>실시간 미리보기</h2><p class="muted">오른쪽 미리보기는 저장 전에 선택 결과를 보여줍니다.</p></div><span class="system">LIVE</span></div>
+    <div class="preview-box"><h2 style="text-align:center">병원 등록 신청</h2><div id="previewFields" class="preview-grid"></div><div style="margin-top:16px;background:#eee;padding:10px;border-radius:7px;font-size:12px">일련번호와 등록일은 접수 시 자동 생성됩니다.</div><button class="btn black" style="width:100%;margin-top:14px" disabled>병원 등록 신청</button></div>
+  </aside>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const labels={company_name:'병원명',company_name_en:'병원명(en)',hospital_id:'병원ID',ceo_name:'대표자',business_no:'사업자등록번호',biz_cert:'사업자등록증',representative_phone:'대표전화',address1:'주소1',address2:'주소2',postal_code:'우편번호',medical_subjects:'진료과목',fax:'팩스',homepage:'홈페이지',serial_no:'일련번호',contact_name:'담당자명',contact_mobile:'담당자 모바일폰',contact_email:'담당자 이메일'};
+const core=new Set(['company_name','hospital_id','business_no','contact_email']);
+let fields=[];
+async function api(url,opt){const r=await fetch(url,opt);let d={};try{d=await r.json()}catch{}if(r.status===401){location.href='/supervisor';throw Error('로그인이 필요합니다.')}if(!r.ok)throw Error(d.error||'요청을 처리하지 못했습니다.');return d}
+function render(){
+  $('fieldList').innerHTML=fields.map(f=>{const auto=f.field_key==='serial_no',locked=core.has(f.field_key);return `<div class="field-row" data-key="${f.field_key}"><b>${labels[f.field_key]} ${auto?'<span class="system">자동생성</span>':''}</b><label class="switch"><input type="checkbox" data-role="enabled" ${f.enabled?'checked':''} ${locked?'disabled':''}> 포함</label><label class="switch"><input type="checkbox" data-role="required" ${f.required?'checked':''} ${locked||auto?'disabled':''}> ${f.required?'필수':'선택'}</label><label class="switch"><input type="checkbox" data-role="searchable" ${f.searchable?'checked':''}> 사용</label></div>`}).join('');
+  document.querySelectorAll('.field-row[data-key] input').forEach(input=>input.addEventListener('change',e=>{const row=e.target.closest('.field-row'),f=fields.find(x=>x.field_key===row.dataset.key);f[e.target.dataset.role]=e.target.checked;if(!f.enabled)f.required=false;render()}));
+  renderPreview();
+}
+function renderPreview(){
+  $('previewFields').innerHTML=fields.filter(f=>f.enabled).map(f=>{const k=f.field_key;if(k==='serial_no')return `<div class="preview-field span2"><label>일련번호</label><input value="접수 시 자동 생성" disabled></div>`;return `<div class="preview-field ${['address1','address2','medical_subjects','biz_cert'].includes(k)?'span2':''}"><label>${labels[k]} ${f.required?'<span class="required">*</span>':'<small>(선택)</small>'}</label><input type="${k==='biz_cert'?'file':'text'}" disabled></div>`}).join('')||'<p class="muted span2">등록폼에 표시할 항목을 선택하세요.</p>';
+}
+async function init(){const d=await api('/api/admin/hospital-form-config');fields=d.data.map(f=>({...f,enabled:Boolean(f.enabled),required:Boolean(f.required),searchable:Boolean(f.searchable)}));render()}
+$('publishBtn').addEventListener('click',async()=>{try{await api('/api/admin/hospital-form-config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields})});$('result').style.display='block';const d=await api('/api/admin/hospital-form-config');fields=d.data.map(f=>({...f,enabled:Boolean(f.enabled),required:Boolean(f.required),searchable:Boolean(f.searchable)}));render()}catch(e){await MxAlert.error(e.message,{title:'저장 실패'})}});
+$('logoutBtn').addEventListener('click',async()=>{await fetch('/api/admin/logout',{method:'POST'});location.href='/supervisor'});init().catch(e=>MxAlert.error(e.message,{title:'조회 실패'}));
+</script></body></html>

@@ -92,6 +92,26 @@ export const uploadSurveyImage = multer({
   },
 });
 
+const resourceImageStorage = multer.diskStorage({
+  destination: (req, _file, cb) => {
+    const advertiserId = (req.session as any).advertiser?.id || 'tmp';
+    const dir = path.join(UPLOAD_ROOT, String(advertiserId), 'library');
+    ensureDir(dir);
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => cb(null, `${uuidv4()}${path.extname(file.originalname).toLowerCase()}`),
+});
+
+export const uploadResourceImage = multer({
+  storage: resourceImageStorage,
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    if (allowed.includes(path.extname(file.originalname).toLowerCase()) && file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('JPG, PNG, GIF, WEBP 이미지 파일만 업로드할 수 있습니다.'));
+  },
+});
+
 // ── 채팅 첨부 (txt 계열 차단) ──────────────────────────────
 const chatFileStorage = multer.diskStorage({
   destination: (req, _file, cb) => {

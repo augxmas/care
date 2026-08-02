@@ -1,0 +1,752 @@
+{
+  "createdAt": "2026-07-25T12:16:13.379Z",
+  "database": "advertise",
+  "tables": {
+    "advertisers": {
+      "createSql": "CREATE TABLE `advertisers` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `company_name` varchar(200) NOT NULL COMMENT '회사명',\n  `business_no` varchar(20) NOT NULL COMMENT '사업자등록번호',\n  `ceo_name` text DEFAULT NULL COMMENT '대표자명(암호화)',\n  `address1` varchar(500) NOT NULL COMMENT '주소1',\n  `address2` varchar(500) DEFAULT NULL COMMENT '주소2',\n  `postal_code` varchar(10) NOT NULL COMMENT '우편번호',\n  `contact_name` text DEFAULT NULL COMMENT '담당자명(암호화)',\n  `contact_mobile` text DEFAULT NULL COMMENT '담당자 모바일(암호화)',\n  `contact_phone` text DEFAULT NULL COMMENT '담당자 일반전화(암호화)',\n  `contact_email` text DEFAULT NULL COMMENT '담당자 이메일(암호화)',\n  `email_hash` varchar(64) NOT NULL COMMENT '이메일 해시(로그인 조회용)',\n  `password_hash` varchar(255) NOT NULL COMMENT '비밀번호(bcrypt)',\n  `push_consent` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Push 알림 동의',\n  `email_consent` tinyint(1) NOT NULL DEFAULT 0 COMMENT '이메일 수신 동의',\n  `terms_consent` tinyint(1) NOT NULL DEFAULT 0 COMMENT '이용약관 동의',\n  `privacy_consent` tinyint(1) NOT NULL DEFAULT 0 COMMENT '개인정보 동의',\n  `biz_cert_path` varchar(500) DEFAULT NULL COMMENT '사업자등록증명원 파일경로',\n  `biz_cert_name` varchar(255) DEFAULT NULL COMMENT '사업자등록증명원 원본파일명',\n  `status` enum('pending','approved','rejected','terminated') NOT NULL DEFAULT 'pending' COMMENT '상태',\n  `status_reason` text DEFAULT NULL COMMENT '상태변경 사유',\n  `bank_account` text DEFAULT NULL COMMENT '계좌번호(암호화)',\n  `email_verified` tinyint(1) NOT NULL DEFAULT 0 COMMENT '이메일 인증여부',\n  `last_login_ip` varchar(45) DEFAULT NULL COMMENT '마지막 로그인 IP',\n  `last_login_at` datetime DEFAULT NULL COMMENT '마지막 로그인 시각',\n  `created_at` datetime NOT NULL DEFAULT current_timestamp(),\n  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),\n  `password_reset_required` tinyint(1) NOT NULL DEFAULT 0,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `business_no` (`business_no`),\n  UNIQUE KEY `email_hash` (`email_hash`),\n  KEY `idx_advertisers_status` (`status`),\n  KEY `idx_advertisers_email` (`email_hash`)\n) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='광고주'",
+      "rows": [
+        {
+          "id": 1,
+          "company_name": "(주)모노라마",
+          "business_no": "277-86-00185",
+          "ceo_name": "f1ajBhFdYr81FdkQFbszAQ==",
+          "address1": "6uyqp1ZhFibIs03P/H3b3wmRjLT23q95cTj02AiDnzZY4CEiOc/fpJwaTUYkt3wi",
+          "address2": "V/efKVTY8sAZ2rQE4ueHdA==",
+          "postal_code": "07277",
+          "contact_name": "f1ajBhFdYr81FdkQFbszAQ==",
+          "contact_mobile": "9/xf+l2cUQ5GU5fCPBicIA==",
+          "contact_phone": "AXunskk1EUutuGTS8NVDlg==",
+          "contact_email": "ivUYiGR2vyrzvtcf6JmKkqOJ7OWSdtRRCUrXyS4XriI=",
+          "email_hash": "02234413b1ed7311d041bc79025a561388a9fa20430b4a3b142f1a48aa675621",
+          "password_hash": "$2b$12$czCx0INJ5ZO7TMVWc9Qda.iquBJ0Q7jdFEk/hTFGQZvmRWWzLbpsK",
+          "push_consent": 1,
+          "email_consent": 0,
+          "terms_consent": 1,
+          "privacy_consent": 1,
+          "biz_cert_path": "C:\\proj\\advertiser\\uploads\\biz-certs\\93a598a2-cfe5-4177-9a81-443d93f8e6d7.pdf",
+          "biz_cert_name": "ì¬ììë±ë¡ì¦ëª.pdf",
+          "status": "approved",
+          "status_reason": null,
+          "bank_account": null,
+          "email_verified": 1,
+          "last_login_ip": "::1",
+          "last_login_at": "2026-05-23T01:12:09.000Z",
+          "created_at": "2026-05-17T05:19:25.000Z",
+          "updated_at": "2026-05-23T01:12:09.000Z",
+          "password_reset_required": 0
+        }
+      ]
+    },
+    "campaigns": {
+      "createSql": "CREATE TABLE `campaigns` (\n  `id` varchar(12) NOT NULL COMMENT '캠페인ID (yymmdd_dddd)',\n  `advertiser_id` int(11) NOT NULL,\n  `campaign_name` varchar(300) NOT NULL COMMENT '캠페인명',\n  `description` text DEFAULT NULL COMMENT '캠페인 설명',\n  `has_image` tinyint(1) NOT NULL DEFAULT 0,\n  `has_html` tinyint(1) NOT NULL DEFAULT 0,\n  `has_youtube` tinyint(1) NOT NULL DEFAULT 0,\n  `image_url` varchar(1000) DEFAULT NULL COMMENT '이미지 URL',\n  `image_path` varchar(500) DEFAULT NULL COMMENT '이미지 파일 경로',\n  `image_filename` varchar(255) DEFAULT NULL COMMENT '이미지 원본파일명',\n  `image_width` int(11) DEFAULT NULL COMMENT '이미지 가로(px)',\n  `image_height` int(11) DEFAULT NULL COMMENT '이미지 세로(px)',\n  `html_url` varchar(1000) DEFAULT NULL COMMENT 'HTML URL',\n  `html_path` varchar(500) DEFAULT NULL COMMENT 'HTML 파일 경로',\n  `html_filename` varchar(255) DEFAULT NULL COMMENT 'HTML 원본파일명',\n  `youtube_url` varchar(1000) DEFAULT NULL COMMENT 'YouTube URL',\n  `from_date` date NOT NULL COMMENT '광고 시작일',\n  `to_date` date NOT NULL COMMENT '광고 종료일',\n  `ad_days` int(11) NOT NULL DEFAULT 0 COMMENT '광고일수',\n  `base_fee` decimal(15,0) NOT NULL DEFAULT 0 COMMENT '기본 광고료',\n  `vat` decimal(15,0) NOT NULL DEFAULT 0 COMMENT '부가세',\n  `total_fee` decimal(15,0) NOT NULL DEFAULT 0 COMMENT '총 광고료',\n  `status` enum('입금전','입금확인','광고중','광고종료','취소') NOT NULL DEFAULT '입금전',\n  `quotation_sent_at` datetime DEFAULT NULL COMMENT '견적서 발송 시각',\n  `quotation_token` varchar(64) DEFAULT NULL COMMENT '견적서 읽음 추적 토큰',\n  `quotation_read_at` datetime DEFAULT NULL COMMENT '견적서 읽음 시각',\n  `payment_confirmed_at` datetime DEFAULT NULL COMMENT '입금 확인 시각',\n  `payment_confirmed_by` varchar(100) DEFAULT NULL COMMENT '입금 확인자',\n  `files_backed_up` tinyint(1) NOT NULL DEFAULT 0 COMMENT '파일 백업 완료여부',\n  `created_at` datetime NOT NULL DEFAULT current_timestamp(),\n  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),\n  `approved_at` datetime DEFAULT NULL COMMENT '승인일 (광고중 전환 시각)',\n  `approved_by` varchar(100) DEFAULT NULL COMMENT '승인자 (supervisor 또는 batch)',\n  `cancelled_at` datetime DEFAULT NULL COMMENT '취소일',\n  `cancelled_by` varchar(100) DEFAULT NULL COMMENT '취소자 (supervisor, advertiser 또는 batch)',\n  PRIMARY KEY (`id`),\n  KEY `idx_campaigns_advertiser` (`advertiser_id`),\n  KEY `idx_campaigns_status` (`status`),\n  KEY `idx_campaigns_dates` (`from_date`,`to_date`),\n  CONSTRAINT `1` FOREIGN KEY (`advertiser_id`) REFERENCES `advertisers` (`id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='캠페인'",
+      "rows": [
+        {
+          "id": "260517_0001",
+          "advertiser_id": 1,
+          "campaign_name": "석가탄신일_기념",
+          "description": "향수판매",
+          "has_image": 1,
+          "has_html": 0,
+          "has_youtube": 1,
+          "image_url": "/uploads/active/1/260517_0001/1ae34769-8fee-4b83-a916-8aace1123f29.jpg",
+          "image_path": "C:\\proj\\advertiser\\uploads\\active\\1\\260517_0001\\1ae34769-8fee-4b83-a916-8aace1123f29.jpg",
+          "image_filename": "31069b9b-8e13-11e9-ac69-48df37269fd0_05.jpg",
+          "image_width": null,
+          "image_height": null,
+          "html_url": null,
+          "html_path": null,
+          "html_filename": null,
+          "youtube_url": "https://www.youtube.com/watch?v=f_K7M2a8sJo",
+          "from_date": "2026-05-17T15:00:00.000Z",
+          "to_date": "2026-05-22T15:00:00.000Z",
+          "ad_days": 6,
+          "base_fee": "12000",
+          "vat": "1200",
+          "total_fee": "13200",
+          "status": "광고중",
+          "quotation_sent_at": "2026-05-17T06:08:33.000Z",
+          "quotation_token": "f4f00c1d-6ad6-4391-ac2d-a97227efc9d1",
+          "quotation_read_at": null,
+          "payment_confirmed_at": "2026-05-17T06:49:40.000Z",
+          "payment_confirmed_by": "supervisor",
+          "files_backed_up": 0,
+          "created_at": "2026-05-17T06:08:33.000Z",
+          "updated_at": "2026-05-18T15:04:41.000Z",
+          "approved_at": "2026-05-17T08:24:29.000Z",
+          "approved_by": "supervisor",
+          "cancelled_at": null,
+          "cancelled_by": null
+        },
+        {
+          "id": "260517_0002",
+          "advertiser_id": 1,
+          "campaign_name": "5월 가족의 날 ",
+          "description": "가족에게 주는 설명",
+          "has_image": 1,
+          "has_html": 0,
+          "has_youtube": 0,
+          "image_url": "/uploads/active/1/260517_0002/03f61245-378d-42be-8e42-6c1c8c925bbc.jpg",
+          "image_path": "C:\\proj\\advertiser\\uploads\\active\\1\\260517_0002\\03f61245-378d-42be-8e42-6c1c8c925bbc.jpg",
+          "image_filename": "16595-1600x900.jpg",
+          "image_width": 1600,
+          "image_height": 900,
+          "html_url": null,
+          "html_path": null,
+          "html_filename": null,
+          "youtube_url": null,
+          "from_date": "2026-05-19T15:00:00.000Z",
+          "to_date": "2026-05-23T15:00:00.000Z",
+          "ad_days": 5,
+          "base_fee": "5000",
+          "vat": "500",
+          "total_fee": "5500",
+          "status": "취소",
+          "quotation_sent_at": "2026-05-17T08:13:31.000Z",
+          "quotation_token": "8ca37726-0d84-4358-8dbb-1de23e0d15b9",
+          "quotation_read_at": null,
+          "payment_confirmed_at": "2026-05-17T08:28:38.000Z",
+          "payment_confirmed_by": "supervisor",
+          "files_backed_up": 0,
+          "created_at": "2026-05-17T08:13:31.000Z",
+          "updated_at": "2026-05-18T15:15:39.000Z",
+          "approved_at": "2026-05-17T08:29:00.000Z",
+          "approved_by": "supervisor",
+          "cancelled_at": "2026-05-18T15:15:39.000Z",
+          "cancelled_by": "supervisor"
+        }
+      ]
+    },
+    "campaign_sequences": {
+      "createSql": "CREATE TABLE `campaign_sequences` (\n  `seq_date` date NOT NULL,\n  `last_seq` int(11) NOT NULL DEFAULT 0,\n  PRIMARY KEY (`seq_date`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='캠페인 ID 일련번호'",
+      "rows": [
+        {
+          "seq_date": "2026-05-16T15:00:00.000Z",
+          "last_seq": 2
+        }
+      ]
+    },
+    "email_logs": {
+      "createSql": "CREATE TABLE `email_logs` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `template_key` varchar(100) NOT NULL COMMENT '템플릿 키',\n  `to_email` varchar(255) NOT NULL COMMENT '수신자',\n  `subject` varchar(500) DEFAULT NULL COMMENT '제목',\n  `campaign_id` varchar(12) DEFAULT NULL COMMENT '관련 캠페인 ID',\n  `advertiser_id` int(11) DEFAULT NULL COMMENT '관련 광고주 ID',\n  `status` enum('sent','failed') NOT NULL DEFAULT 'sent',\n  `error_msg` text DEFAULT NULL COMMENT '발송 실패 메세지',\n  `sent_at` datetime NOT NULL DEFAULT current_timestamp(),\n  PRIMARY KEY (`id`),\n  KEY `idx_email_logs_campaign` (`campaign_id`)\n) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='이메일 발송 이력'",
+      "rows": [
+        {
+          "id": 1,
+          "template_key": "email_verification",
+          "to_email": "kimch@mono-rama.com",
+          "subject": "[모노라마] 이메일 본인확인 코드",
+          "campaign_id": null,
+          "advertiser_id": null,
+          "status": "failed",
+          "error_msg": "Invalid login: 535 5.7.1 Username and Password not accepted MhFMV2YSQAOGOrDI0-dwgg - nsmtp",
+          "sent_at": "2026-05-17T05:04:33.000Z"
+        },
+        {
+          "id": 2,
+          "template_key": "email_verification",
+          "to_email": "kimch@mono-rama.com",
+          "subject": "[모노라마] 이메일 본인확인 코드",
+          "campaign_id": null,
+          "advertiser_id": null,
+          "status": "failed",
+          "error_msg": "Invalid login: 535 5.7.1 Username and Password not accepted eFRcYoexR7an+J7RyfEbqw - nsmtp",
+          "sent_at": "2026-05-17T05:11:06.000Z"
+        },
+        {
+          "id": 3,
+          "template_key": "email_verification",
+          "to_email": "kimch@mono-rama.com",
+          "subject": "[모노라마] 이메일 본인확인 코드",
+          "campaign_id": null,
+          "advertiser_id": null,
+          "status": "failed",
+          "error_msg": "Invalid login: 535 5.7.1 Username and Password not accepted KfJsSFl8Tiymv382+ADyiw - nsmtp",
+          "sent_at": "2026-05-17T05:12:07.000Z"
+        },
+        {
+          "id": 4,
+          "template_key": "email_verification",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 이메일 본인확인 코드",
+          "campaign_id": null,
+          "advertiser_id": null,
+          "status": "failed",
+          "error_msg": "Invalid login: 535 5.7.1 Username and Password not accepted -A-0p8eVRm63hhe-bVyvTw - nsmtp",
+          "sent_at": "2026-05-17T05:13:49.000Z"
+        },
+        {
+          "id": 5,
+          "template_key": "email_verification",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 이메일 본인확인 코드",
+          "campaign_id": null,
+          "advertiser_id": null,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T05:17:03.000Z"
+        },
+        {
+          "id": 6,
+          "template_key": "registration_submitted",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 광고주 회원가입 신청이 접수되었습니다",
+          "campaign_id": null,
+          "advertiser_id": 1,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T05:19:25.000Z"
+        },
+        {
+          "id": 7,
+          "template_key": "registration_submitted_supervisor",
+          "to_email": "kimch@monorama.kr",
+          "subject": "[모노라마] 새 광고주 회원가입 신청 - (주)모노라마",
+          "campaign_id": null,
+          "advertiser_id": 1,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T05:19:26.000Z"
+        },
+        {
+          "id": 8,
+          "template_key": "registration_approved",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 광고주 회원가입이 승인되었습니다",
+          "campaign_id": null,
+          "advertiser_id": 1,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T05:45:06.000Z"
+        },
+        {
+          "id": 9,
+          "template_key": "quotation_advertiser",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 캠페인 견적서 - 석가탄신일_기념",
+          "campaign_id": "260517_0001",
+          "advertiser_id": 1,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T06:08:33.000Z"
+        },
+        {
+          "id": 10,
+          "template_key": "quotation_supervisor",
+          "to_email": "kimch@monorama.kr",
+          "subject": "[모노라마 관리자] 새 캠페인 등록 알림 - 석가탄신일_기념 ((주)모노라마)",
+          "campaign_id": "260517_0001",
+          "advertiser_id": 1,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T06:08:34.000Z"
+        },
+        {
+          "id": 11,
+          "template_key": "temp_password",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 임시비밀번호 안내",
+          "campaign_id": null,
+          "advertiser_id": 1,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T07:32:46.000Z"
+        },
+        {
+          "id": 12,
+          "template_key": "quotation_advertiser",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 캠페인 견적서 - 5월 가족의 날 ",
+          "campaign_id": "260517_0002",
+          "advertiser_id": 1,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T08:13:32.000Z"
+        },
+        {
+          "id": 13,
+          "template_key": "quotation_supervisor",
+          "to_email": "kimch@monorama.kr",
+          "subject": "[모노라마 관리자] 새 캠페인 등록 알림 - 5월 가족의 날  ((주)모노라마)",
+          "campaign_id": "260517_0002",
+          "advertiser_id": 1,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T08:13:32.000Z"
+        },
+        {
+          "id": 14,
+          "template_key": "campaign_started_advertiser",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 광고가 시작되었습니다 - 석가탄신일_기념",
+          "campaign_id": "260517_0001",
+          "advertiser_id": null,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T08:24:30.000Z"
+        },
+        {
+          "id": 15,
+          "template_key": "payment_confirmed_advertiser",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 입금이 확인되었습니다 - 5월 가족의 날 ",
+          "campaign_id": "260517_0002",
+          "advertiser_id": null,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T08:28:39.000Z"
+        },
+        {
+          "id": 16,
+          "template_key": "campaign_started_advertiser",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 광고가 시작되었습니다 - 5월 가족의 날 ",
+          "campaign_id": "260517_0002",
+          "advertiser_id": null,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T08:29:01.000Z"
+        },
+        {
+          "id": 17,
+          "template_key": "campaign_cancelled_advertiser",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 캠페인이 취소되었습니다 - 5월 가족의 날 ",
+          "campaign_id": "260517_0002",
+          "advertiser_id": null,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T08:29:29.000Z"
+        },
+        {
+          "id": 18,
+          "template_key": "campaign_cancelled_advertiser",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 캠페인이 취소되었습니다 - 석가탄신일_기념",
+          "campaign_id": "260517_0001",
+          "advertiser_id": null,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-17T09:57:12.000Z"
+        },
+        {
+          "id": 19,
+          "template_key": "campaign_cancelled_advertiser",
+          "to_email": "augxmas@gmail.com",
+          "subject": "[모노라마] 캠페인이 취소되었습니다 - 5월 가족의 날 ",
+          "campaign_id": "260517_0002",
+          "advertiser_id": null,
+          "status": "sent",
+          "error_msg": null,
+          "sent_at": "2026-05-18T15:15:40.000Z"
+        }
+      ]
+    },
+    "email_verifications": {
+      "createSql": "CREATE TABLE `email_verifications` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `email` varchar(255) NOT NULL COMMENT '인증 대상 이메일',\n  `code` varchar(6) NOT NULL COMMENT '6자리 인증코드',\n  `verified` tinyint(1) NOT NULL DEFAULT 0,\n  `expires_at` datetime NOT NULL,\n  `created_at` datetime NOT NULL DEFAULT current_timestamp(),\n  PRIMARY KEY (`id`)\n) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='이메일 인증코드'",
+      "rows": [
+        {
+          "id": 1,
+          "email": "kimch@mono-rama.com",
+          "code": "258477",
+          "verified": 0,
+          "expires_at": "2026-05-17T05:14:33.000Z",
+          "created_at": "2026-05-17T05:04:33.000Z"
+        },
+        {
+          "id": 2,
+          "email": "kimch@mono-rama.com",
+          "code": "807533",
+          "verified": 0,
+          "expires_at": "2026-05-17T05:21:05.000Z",
+          "created_at": "2026-05-17T05:11:05.000Z"
+        },
+        {
+          "id": 3,
+          "email": "kimch@mono-rama.com",
+          "code": "326629",
+          "verified": 0,
+          "expires_at": "2026-05-17T05:22:06.000Z",
+          "created_at": "2026-05-17T05:12:06.000Z"
+        },
+        {
+          "id": 4,
+          "email": "augxmas@gmail.com",
+          "code": "897337",
+          "verified": 0,
+          "expires_at": "2026-05-17T05:23:49.000Z",
+          "created_at": "2026-05-17T05:13:49.000Z"
+        },
+        {
+          "id": 5,
+          "email": "augxmas@gmail.com",
+          "code": "436719",
+          "verified": 1,
+          "expires_at": "2026-05-17T05:27:02.000Z",
+          "created_at": "2026-05-17T05:17:02.000Z"
+        }
+      ]
+    },
+    "login_histories": {
+      "createSql": "CREATE TABLE `login_histories` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `user_type` enum('advertiser','supervisor') NOT NULL,\n  `user_id` varchar(100) NOT NULL COMMENT '광고주 id 또는 supervisor',\n  `login_ip` varchar(45) NOT NULL,\n  `login_at` datetime NOT NULL DEFAULT current_timestamp(),\n  `logout_at` datetime DEFAULT NULL COMMENT '로그아웃 시각',\n  `session_id` varchar(128) DEFAULT NULL COMMENT '세션 ID',\n  PRIMARY KEY (`id`),\n  KEY `idx_login_hist_user` (`user_type`,`user_id`)\n) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='로그인 이력'",
+      "rows": [
+        {
+          "id": 1,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T05:00:09.000Z",
+          "logout_at": "2026-05-17T05:04:26.000Z",
+          "session_id": "NSwWIWb9IDeXhj9meB9nDCiQMRZbuHFv"
+        },
+        {
+          "id": 2,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T05:22:05.000Z",
+          "logout_at": "2026-05-17T05:34:00.000Z",
+          "session_id": "9HZjvqW1msq2IbGy0QWK6VJTllGyiC4D"
+        },
+        {
+          "id": 3,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T05:29:32.000Z",
+          "logout_at": "2026-05-17T05:35:33.000Z",
+          "session_id": "scBTyvxyI63xTirh3iv2gL3tHDSQPEh5"
+        },
+        {
+          "id": 4,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T05:42:14.000Z",
+          "logout_at": "2026-05-17T05:50:00.000Z",
+          "session_id": "DcJ9j1oAT7rKjDaPpXs2fwVTsY0csVpp"
+        },
+        {
+          "id": 5,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T05:45:31.000Z",
+          "logout_at": "2026-05-17T06:25:00.000Z",
+          "session_id": "zgD21qnOn8ydpGRQ3NPg7y_4n281w05G"
+        },
+        {
+          "id": 6,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T06:06:50.000Z",
+          "logout_at": "2026-05-17T06:13:00.000Z",
+          "session_id": "EgBoif2bG1hXUwEpYRZZDm04vpzRS164"
+        },
+        {
+          "id": 7,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T06:10:07.000Z",
+          "logout_at": "2026-05-17T06:25:00.000Z",
+          "session_id": "zgD21qnOn8ydpGRQ3NPg7y_4n281w05G"
+        },
+        {
+          "id": 8,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T06:42:45.000Z",
+          "logout_at": "2026-05-17T07:00:00.000Z",
+          "session_id": "GsttpbIbiFkt1JpfOEZWVeRYTtaOfsvV"
+        },
+        {
+          "id": 9,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T06:48:55.000Z",
+          "logout_at": "2026-05-17T07:14:07.000Z",
+          "session_id": "OYVrteBkUq5_ZHm5Am5-o2pA7QnZBilo"
+        },
+        {
+          "id": 10,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T07:20:00.000Z",
+          "logout_at": "2026-05-17T07:32:02.000Z",
+          "session_id": "H_ijw4PtQPD-qdXfPDS5kJZgcDKIrwUR"
+        },
+        {
+          "id": 11,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T07:32:23.000Z",
+          "logout_at": "2026-05-17T07:32:29.000Z",
+          "session_id": "tjV0o6BmyUhFWV4QBMzAjLX-koLmaMis"
+        },
+        {
+          "id": 12,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T07:33:20.000Z",
+          "logout_at": "2026-05-17T07:44:24.000Z",
+          "session_id": "3pUdTL19eTVJ2apzPQdgofSYLCj-Yq9A"
+        },
+        {
+          "id": 13,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T07:44:47.000Z",
+          "logout_at": "2026-05-17T07:57:00.000Z",
+          "session_id": "NYyYwOBPxz0s0FhGPkMbUWoK__dOlJr_"
+        },
+        {
+          "id": 14,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T07:45:30.000Z",
+          "logout_at": "2026-05-17T08:07:00.000Z",
+          "session_id": "Cs7dZA9KbRemo7WLrH8iU-KzSAII4CJg"
+        },
+        {
+          "id": 15,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T08:03:11.000Z",
+          "logout_at": "2026-05-17T08:07:42.000Z",
+          "session_id": "v-5xgWkyPGROqudh5VGhS1-DxtBKwHjo"
+        },
+        {
+          "id": 16,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T08:10:38.000Z",
+          "logout_at": "2026-05-17T08:21:39.000Z",
+          "session_id": "prlzGt3KGTu79m5bkJkpwZXDSJxJqOh6"
+        },
+        {
+          "id": 17,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T08:15:57.000Z",
+          "logout_at": "2026-05-17T08:22:00.000Z",
+          "session_id": "FTkhX8M-8yqSPCwDUH_1JjmMAJvZd77T"
+        },
+        {
+          "id": 18,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T08:23:03.000Z",
+          "logout_at": "2026-05-17T08:36:15.000Z",
+          "session_id": "7sVHaw4sH7oxZAqFsL2_Gqt87TjRs4b0"
+        },
+        {
+          "id": 19,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T09:31:24.000Z",
+          "logout_at": "2026-05-17T09:55:00.000Z",
+          "session_id": "9wjQtuQ1QbvCqaAh68MwtainDJKZj6sr"
+        },
+        {
+          "id": 20,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T09:32:11.000Z",
+          "logout_at": "2026-05-17T09:37:00.000Z",
+          "session_id": "SIZGj_tdQqNuW2bCnRkNmKV7Ady-nbna"
+        },
+        {
+          "id": 21,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-17T09:56:40.000Z",
+          "logout_at": "2026-05-17T10:03:00.000Z",
+          "session_id": "DBPtGEIRCeTHdAxtusw7Q_79_2Ke4WuB"
+        },
+        {
+          "id": 22,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-18T14:03:03.000Z",
+          "logout_at": "2026-05-18T14:11:57.000Z",
+          "session_id": "ByTF4TsrTQeANV-EhthlaxaGCmEWJlhq"
+        },
+        {
+          "id": 23,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-18T14:06:10.000Z",
+          "logout_at": "2026-05-18T14:13:57.000Z",
+          "session_id": "dVFCPX68Kna2YjY0up8uHFq_ChrhJ_MJ"
+        },
+        {
+          "id": 24,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-18T14:43:32.000Z",
+          "logout_at": "2026-05-18T14:56:57.000Z",
+          "session_id": "U5pih44q5ux0JsknDadZOoWSa2sgDhgT"
+        },
+        {
+          "id": 25,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-18T15:02:06.000Z",
+          "logout_at": "2026-05-18T15:25:22.000Z",
+          "session_id": "R0l7h_fghlpIEb7I49mz-M1KvYjJUm_V"
+        },
+        {
+          "id": 26,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-18T15:12:14.000Z",
+          "logout_at": "2026-05-18T15:17:54.000Z",
+          "session_id": "xwoUgPunrqWHNcNHqtB4lhI_znq8tZbb"
+        },
+        {
+          "id": 27,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-18T15:20:33.000Z",
+          "logout_at": "2026-05-18T15:45:36.000Z",
+          "session_id": "lnxxGtXoMQKVFwijCLHnsAAA7mHQmeTk"
+        },
+        {
+          "id": 28,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-19T04:44:29.000Z",
+          "logout_at": null,
+          "session_id": "YxET64Js1UzmiIpIiA3m6FeTkZLpwr4P"
+        },
+        {
+          "id": 29,
+          "user_type": "advertiser",
+          "user_id": "1",
+          "login_ip": "::1",
+          "login_at": "2026-05-23T01:12:09.000Z",
+          "logout_at": "2026-05-23T01:16:10.000Z",
+          "session_id": "u59vCzI9jAmpYCUY2OBBsh49l20R6LeU"
+        },
+        {
+          "id": 30,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-23T01:12:53.000Z",
+          "logout_at": "2026-05-23T01:27:37.000Z",
+          "session_id": "VmPOBfgpGVmhs6NnjsDeMgoQrguxaJjJ"
+        },
+        {
+          "id": 31,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-05-23T01:27:54.000Z",
+          "logout_at": "2026-05-23T01:51:11.000Z",
+          "session_id": "HNTUWtMudoGCioOlOtPKR-zzbCCh0oJH"
+        },
+        {
+          "id": 32,
+          "user_type": "supervisor",
+          "user_id": "supervisor",
+          "login_ip": "::1",
+          "login_at": "2026-07-25T12:12:13.000Z",
+          "logout_at": null,
+          "session_id": "RncWAtGVUnbeudirat4tqg5k_39dDOkr"
+        }
+      ]
+    },
+    "sessions": {
+      "createSql": "CREATE TABLE `sessions` (\n  `session_id` varchar(128) NOT NULL,\n  `expires` int(10) unsigned NOT NULL,\n  `data` mediumtext DEFAULT NULL,\n  `created_at` datetime NOT NULL DEFAULT current_timestamp(),\n  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),\n  PRIMARY KEY (`session_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='세션'",
+      "rows": [
+        {
+          "session_id": "RncWAtGVUnbeudirat4tqg5k_39dDOkr",
+          "expires": 1784982138,
+          "data": "{\"cookie\":{\"originalMaxAge\":600000,\"expires\":\"2026-07-25T12:22:13.430Z\",\"secure\":false,\"httpOnly\":true,\"path\":\"/\"},\"supervisor\":{\"username\":\"supervisor\"},\"supervisorLastIp\":\"::1\",\"supervisorLastAt\":\"2026-07-25T12:12:13.477Z\",\"lastActivity\":1784981533477}",
+          "created_at": "2026-07-25T12:12:13.000Z",
+          "updated_at": "2026-07-25T12:12:17.000Z"
+        }
+      ]
+    },
+    "system_config": {
+      "createSql": "CREATE TABLE `system_config` (\n  `config_key` varchar(100) NOT NULL,\n  `config_value` text NOT NULL,\n  `description` varchar(500) DEFAULT NULL,\n  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),\n  PRIMARY KEY (`config_key`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='시스템 설정'",
+      "rows": [
+        {
+          "config_key": "ad_price_per_day",
+          "config_value": "1000",
+          "description": "광고 유형별 1일 광고료(원)",
+          "updated_at": "2026-05-17T04:54:38.000Z"
+        },
+        {
+          "config_key": "company_account",
+          "config_value": "000-000-000000",
+          "description": "은행계좌번호",
+          "updated_at": "2026-05-17T04:54:38.000Z"
+        },
+        {
+          "config_key": "company_bank",
+          "config_value": "국민은행",
+          "description": "은행명",
+          "updated_at": "2026-05-17T04:54:38.000Z"
+        },
+        {
+          "config_key": "company_biz_no",
+          "config_value": "277-86-00185",
+          "description": "사업자등록번호",
+          "updated_at": "2026-05-17T04:54:38.000Z"
+        },
+        {
+          "config_key": "company_ceo",
+          "config_value": "김창호",
+          "description": "대표이사",
+          "updated_at": "2026-05-17T04:54:38.000Z"
+        },
+        {
+          "config_key": "company_name",
+          "config_value": "(주)모노라마",
+          "description": "회사명",
+          "updated_at": "2026-05-17T04:54:38.000Z"
+        },
+        {
+          "config_key": "supervisor_email",
+          "config_value": "kimch@monorama.kr",
+          "description": "Supervisor 이메일",
+          "updated_at": "2026-05-17T04:54:38.000Z"
+        },
+        {
+          "config_key": "tax_email",
+          "config_value": "kimch@monorama.kr",
+          "description": "세무담당자 이메일",
+          "updated_at": "2026-05-17T04:54:38.000Z"
+        },
+        {
+          "config_key": "vat_rate",
+          "config_value": "0.1",
+          "description": "부가세율",
+          "updated_at": "2026-05-17T04:54:38.000Z"
+        }
+      ]
+    }
+  }
+}

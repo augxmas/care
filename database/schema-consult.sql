@@ -159,6 +159,11 @@ CREATE TABLE IF NOT EXISTS `chat_tokens` (
 -- email_verifications 교차사용 방지용 purpose (선택) — 없으면 행위별 신규코드로 강제
 ALTER TABLE `email_verifications` ADD COLUMN IF NOT EXISTS `purpose` VARCHAR(20) DEFAULT NULL;
 
+-- Legacy chat_tokens compatibility migration
+ALTER TABLE `chat_tokens` ADD COLUMN IF NOT EXISTS `advertiser_id` BIGINT NULL AFTER `token`;
+ALTER TABLE `chat_tokens` ADD COLUMN IF NOT EXISTS `customer_email` VARCHAR(255) NULL AFTER `conversation_id`;
+ALTER TABLE `chat_tokens` ADD COLUMN IF NOT EXISTS `revoked` TINYINT(1) NOT NULL DEFAULT 0 AFTER `expires_at`;
+
 -- 9. 상담 자격증명 (인증코드 = 로그인 비밀번호, 병원+이메일별 지속)
 --    인증코드를 1회성 OTP가 아니라 "비밀번호"처럼 보관. 재발급 시 갱신.
 CREATE TABLE IF NOT EXISTS `consult_credentials` (
@@ -174,6 +179,19 @@ CREATE TABLE IF NOT EXISTS `consult_credentials` (
 
 -- 인증코드를 비밀번호로 통합 → 게시물별 비밀번호 컬럼은 선택값으로 완화
 ALTER TABLE `consult_posts` MODIFY COLUMN `password_hash` VARCHAR(255) DEFAULT NULL;
+
+CREATE TABLE IF NOT EXISTS `consult_post_attachments` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `advertiser_id` BIGINT NOT NULL,
+  `post_id` BIGINT NOT NULL,
+  `file_path` VARCHAR(500) NOT NULL,
+  `original_name` VARCHAR(255) NOT NULL,
+  `mime_type` VARCHAR(120) DEFAULT NULL,
+  `size_bytes` INT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_consult_post_attachment` (`advertiser_id`,`post_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 스탭 전용(고객 비노출) 메시지 플래그: @시스템 질문/답변. 공유 시 0으로 전환.
 ALTER TABLE `chat_messages` ADD COLUMN IF NOT EXISTS `staff_only` TINYINT(1) NOT NULL DEFAULT 0;

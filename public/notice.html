@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>공지사항 | MODS CLINIC</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/common.css">
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#fff;color:#1f2937}body{padding:0;font-family:'Noto Sans KR',Arial,sans-serif}.notice-popup{width:100%;min-height:100vh;margin:0;background:#fff;border:0;border-radius:0;box-shadow:none;overflow:hidden}.notice-head{position:relative;padding:24px 68px 20px;text-align:center;background:#2563eb;color:#fff}.notice-brand{font-size:10px;font-weight:800;letter-spacing:.2em;opacity:.75;margin-bottom:8px}.notice-title{margin:0;font-size:22px;line-height:1.45;word-break:break-word}.notice-close{position:absolute;right:19px;top:18px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:22px;cursor:pointer}.notice-close:hover{background:rgba(255,255,255,.22)}.notice-meta{padding:11px 24px;border-bottom:1px solid #e5e7eb;text-align:right;color:#9ca3af;font-size:11px}.notice-content{min-height:280px;padding:28px;line-height:1.8;overflow-wrap:anywhere}.notice-content img{max-width:100%;height:auto}.notice-content table{max-width:100%;border-collapse:collapse}.notice-content iframe{max-width:100%}.notice-foot{padding:15px 24px;border-top:1px solid #e5e7eb;text-align:center;background:#fafafa}.close-btn{min-width:110px;border:0;border-radius:7px;padding:11px 18px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer}.empty{padding:70px 20px;text-align:center;color:#9ca3af}@media(max-width:600px){.notice-head{padding:22px 58px 18px}.notice-title{font-size:19px}.notice-content{padding:22px 18px}}
+  </style>
+</head>
+<body>
+  <article class="notice-popup">
+    <header class="notice-head"><div class="notice-brand">MODS CLINIC · NOTICE</div><h1 class="notice-title" id="noticeTitle">공지사항</h1><button class="notice-close" type="button" aria-label="닫기" onclick="closePopup()">×</button></header>
+    <div class="notice-meta" id="noticeMeta"></div>
+    <main class="notice-content" id="noticeContent"><div class="empty">공지사항을 불러오는 중입니다.</div></main>
+    <footer class="notice-foot"><button class="close-btn" type="button" id="closeBtn" onclick="closePopup()">닫기</button></footer>
+  </article>
+  <script>
+    const id=location.pathname.split('/').filter(Boolean).pop() || new URLSearchParams(location.search).get('id');
+    const languages=(navigator.languages?.length?navigator.languages:[navigator.language||'en']).map(value=>String(value).toLowerCase().split('-')[0]).join(',');
+    const labels={ko:{close:'닫기',empty:'공지사항을 찾을 수 없습니다.',date:'작성일'},th:{close:'ปิด',empty:'ไม่พบประกาศ',date:'วันที่'},vi:{close:'Đóng',empty:'Không tìm thấy thông báo',date:'Ngày đăng'},ar:{close:'إغلاق',empty:'لم يتم العثور على الإعلان',date:'التاريخ'},en:{close:'Close',empty:'Notice not found.',date:'Posted'},zh:{close:'关闭',empty:'找不到公告',date:'发布日期'},ja:{close:'閉じる',empty:'お知らせが見つかりません',date:'掲載日'}};
+    function closePopup(){if(window.opener)window.close();else history.length>1?history.back():location.href='/'}
+    function esc(value){return String(value||'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
+    (async()=>{try{const res=await fetch(`/api/notices/public/${encodeURIComponent(id)}?lang=${encodeURIComponent(languages)}`);const data=await res.json();if(!res.ok||!data.ok)throw Error();const n=data.notice;const lang=n.selected_language||'en';const ui=labels[lang]||labels.en;document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.title=`${n.title} | MODS CLINIC`;document.getElementById('noticeTitle').textContent=n.title;document.getElementById('noticeContent').innerHTML=n.content||`<div class="empty">${ui.empty}</div>`;document.getElementById('noticeMeta').textContent=`${ui.date}: ${String(n.created_at||'').replace('T',' ').slice(0,16)}`;document.getElementById('closeBtn').textContent=ui.close}catch{const lang=String(navigator.language||'en').slice(0,2);const ui=labels[lang]||labels.en;document.getElementById('noticeContent').innerHTML=`<div class="empty">${esc(ui.empty)}</div>`;document.getElementById('closeBtn').textContent=ui.close}})();
+  </script>
+</body>
+</html>

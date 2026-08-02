@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>모노라마 병원 CRM 시스템</title>
+  <title>전문 외국환자관리 CRM</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
@@ -66,6 +66,14 @@
       padding:16px 24px; border-top:1px solid var(--gray-200);
       display:flex; justify-content:center;
     }
+    #hospitalSelectOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:20px}
+    #hospitalSelectOverlay.visible{display:flex}.hospital-select-box{width:min(760px,100%);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;background:#fff;border-radius:14px;box-shadow:0 18px 55px rgba(0,0,0,.25)}
+    .hospital-select-head{position:relative;padding:24px 58px 16px;text-align:center;border-bottom:1px solid var(--gray-200)}.hospital-select-head h2{margin:0 0 7px;font-size:20px;color:var(--primary)}.hospital-select-head p{margin:0;color:var(--gray-500);font-size:13px}
+    .hospital-select-close{position:absolute;right:18px;top:16px;width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:var(--gray-500);font-size:27px;line-height:1;cursor:pointer}.hospital-select-close:hover,.hospital-select-close:focus{background:#eff6ff;color:var(--primary);outline:none}
+    .hospital-select-list{padding:20px 28px;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px}.hospital-choice{display:block;cursor:pointer}.hospital-choice input{position:absolute;opacity:0}
+    .hospital-choice-card{height:100%;box-sizing:border-box;padding:17px;border:1.5px solid var(--gray-200);border-radius:10px;transition:.15s}.hospital-choice input:checked+.hospital-choice-card{border-color:var(--primary);background:#eff6ff;box-shadow:0 0 0 1px var(--primary)}
+    .hospital-choice-name{font-weight:800;margin-bottom:8px}.hospital-choice-meta{color:var(--gray-500);font-size:12px;line-height:1.7}.hospital-select-foot{padding:16px 28px;border-top:1px solid var(--gray-200);text-align:center}
+    #hospitalManageBtn{min-width:180px;justify-content:center;background:var(--primary);border-color:var(--primary);color:#fff}#hospitalManageBtn:hover:not(:disabled){background:#1d4ed8;border-color:#1d4ed8}#hospitalManageBtn:disabled{opacity:.4;cursor:not-allowed}@media(max-width:600px){.hospital-select-list{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -146,6 +154,8 @@
 </div>
 
 <!-- 비밀번호 재설정 오버레이 (임시비밀번호 로그인 후) -->
+<div id="hospitalSelectOverlay"><div class="hospital-select-box"><div class="hospital-select-head"><h2>관리할 병원을 선택하세요</h2><p>대행사와 승인된 관계의 병원만 표시됩니다.</p><button type="button" class="hospital-select-close" id="hospitalSelectClose" aria-label="병원 선택 창 닫기">×</button></div><div class="hospital-select-list" id="hospitalSelectList"></div><div class="hospital-select-foot"><button type="button" class="btn" id="hospitalManageBtn" disabled>선택한 병원 관리</button></div></div></div>
+
 <div id="resetOverlay">
   <div class="box">
     <div class="box-header">🔐 비밀번호 재설정 필요</div>
@@ -177,9 +187,31 @@
 
 <script src="/js/alert.js"></script>
 <script>
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  async function showHospitalSelector(){
+    const overlay=document.getElementById('hospitalSelectOverlay'),list=document.getElementById('hospitalSelectList'),manageBtn=document.getElementById('hospitalManageBtn');
+    overlay.classList.add('visible');manageBtn.disabled=true;list.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:35px;color:#6b7280">연계 병원을 불러오는 중입니다...</div>';
+    try{
+      const res=await fetch('/api/auth/agency-hospitals'),data=await res.json();if(!res.ok)throw Error(data.error||'연계 병원을 불러오지 못했습니다.');
+      if(!data.data.length){list.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:35px"><b>관리할 수 있는 병원이 없습니다.</b><p style="color:#6b7280;font-size:13px">승인된 병원 관계가 등록된 후 이용할 수 있습니다.</p></div>';return}
+      list.innerHTML=data.data.map(h=>`<label class="hospital-choice"><input type="radio" name="selectedHospital" value="${h.id}"><div class="hospital-choice-card"><div class="hospital-choice-name">${esc(h.company_name)}</div><div class="hospital-choice-meta">대표자 ${esc(h.ceo_name||'-')}<br>사업자등록번호 ${esc(h.business_no||'-')}<br>일련번호 ${esc(h.serial_no||'-')}<br>진료과목 ${esc(h.medical_subjects||'-')}</div></div></label>`).join('');
+      list.querySelectorAll('input[name="selectedHospital"]').forEach(input=>input.addEventListener('change',()=>{manageBtn.disabled=false}));
+    }catch(error){list.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:35px;color:#dc2626">${esc(error.message)}</div>`}
+  }
+  document.getElementById('hospitalManageBtn').addEventListener('click',async function(){
+    const selected=document.querySelector('input[name="selectedHospital"]:checked');if(!selected)return;this.disabled=true;
+    try{const res=await fetch('/api/auth/select-agency-hospital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hospital_id:Number(selected.value)})}),data=await res.json();if(!res.ok)throw Error(data.error||'병원을 선택하지 못했습니다.');window.location.href='/admin/dashboard'}
+    catch(error){await MxAlert.error(error.message);this.disabled=false}
+  });
+  document.getElementById('hospitalSelectClose').addEventListener('click',()=>{
+    document.getElementById('hospitalSelectOverlay').classList.remove('visible');
+  });
+
   // 이미 로그인되어 있으면 대시보드로
   fetch('/api/auth/me').then(r => r.json()).then(d => {
-    if (d.ok) window.location.href = '/admin/dashboard';
+    if (!d.ok) return;
+    if (d.user?.role === 'advertiser' && !d.user?.selected_hospital) showHospitalSelector();
+    else window.location.href = '/admin/dashboard';
   }).catch(() => {});
 
   /* ── 저장된 로그인 정보 복원 ── */
@@ -294,7 +326,8 @@
         type: 'info',
         icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
       });
-      window.location.href = '/admin/dashboard';
+      if (data.role === 'advertiser') await showHospitalSelector();
+      else window.location.href = '/admin/dashboard';
     } catch (err) {
       MxAlert.error('서버 연결에 실패했습니다.');
     } finally {
@@ -412,7 +445,8 @@
       const data = await res.json();
       if (!res.ok) return MxAlert.error(data.error || '변경에 실패했습니다.');
       await MxAlert.success('비밀번호가 변경되었습니다. 대시보드로 이동합니다.', { title: '변경 완료' });
-      window.location.href = '/admin/dashboard';
+      document.getElementById('resetOverlay').classList.remove('visible');
+      await showHospitalSelector();
     } catch { MxAlert.error('서버 연결에 실패했습니다.'); }
     finally { this.disabled = false; this.textContent = '비밀번호 변경'; }
   });

@@ -24,3 +24,15 @@ logs/
 Thumbs.db
 .vscode/
 *.log
+
+# Local browser test profiles and generated screenshots
+.chrome-modal-profile/
+.edge-modal-profile/
+output/
+
+# Runtime SQLite files (database backups are stored as SQL dumps)
+database/advertise.sqlite
+database/advertise.sqlite-*
+
+# One-off diagnostic scripts
+scripts/tmp-*

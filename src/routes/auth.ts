@@ -59,7 +59,7 @@ router.post('/verify-code', async (req: Request, res: Response) => {
   res.json({ ok: true });
 });
 
-// 광고주 회원가입
+// 대행사 회원가입
 router.post('/register', uploadBizCert.single('biz_cert'), async (req: Request, res: Response) => {
   const {
     company_name, business_no, ceo_name, address1, address2, postal_code,
@@ -113,7 +113,7 @@ router.post('/register', uploadBizCert.single('biz_cert'), async (req: Request, 
 
   const advertiserId = result.insertId;
 
-  // 광고주에게 접수 안내 메일
+  // 대행사에게 접수 안내 메일
   try {
     await sendEmail({
       templateKey: 'registration_submitted',
@@ -133,7 +133,7 @@ router.post('/register', uploadBizCert.single('biz_cert'), async (req: Request, 
     });
   } catch {}
 
-  res.json({ ok: true, message: '회원가입 신청이 완료되었습니다. 승인 후 로그인이 가능합니다.' });
+  res.json({ ok: true, message: '대행사 등록 신청이 완료되었습니다. 승인 후 로그인이 가능합니다.' });
 });
 
 // 통합 로그인 — role: advertiser(관리자) / doctor(의사) / manager(담당자)
@@ -196,6 +196,7 @@ router.post('/login', async (req: Request, res: Response) => {
       name: advertiser.contact_name,
       email: advertiser.contact_email,
     };
+    delete (req.session as any).selectedHospital;
     (req.session as any).lastActivity = Date.now();
 
     return res.json({
@@ -453,6 +454,44 @@ router.post('/logout', async (req: Request, res: Response) => {
   res.json({ ok: true });
 });
 
+router.get('/agency-hospitals', async (req: Request, res: Response) => {
+  const sess: any = req.session;
+  if (!sess.advertiser || sess.user?.role !== 'advertiser') {
+    return res.status(401).json({ error: '대행사 로그인이 필요합니다.' });
+  }
+  const [rows] = await pool.execute<any[]>(
+    `SELECT h.id,h.company_name,h.business_no,h.serial_no,h.medical_subjects,
+            h.representative_phone,fn_decrypt(h.ceo_name) AS ceo_name
+       FROM hospital_agency_requests har
+       JOIN hospitals h ON h.id=har.hospital_id
+      WHERE har.advertiser_id=? AND har.status='approved' AND h.status='approved'
+      ORDER BY h.company_name`,
+    [sess.advertiser.id],
+  );
+  res.json({ ok: true, data: rows, selected_hospital_id: sess.selectedHospital?.id || null });
+});
+
+router.post('/select-agency-hospital', async (req: Request, res: Response) => {
+  const sess: any = req.session;
+  if (!sess.advertiser || sess.user?.role !== 'advertiser') {
+    return res.status(401).json({ error: '대행사 로그인이 필요합니다.' });
+  }
+  const hospitalId = Number(req.body.hospital_id);
+  if (!hospitalId) return res.status(400).json({ error: '관리할 병원을 선택하세요.' });
+  const [rows] = await pool.execute<any[]>(
+    `SELECT h.id,h.company_name,h.business_no,h.serial_no
+       FROM hospital_agency_requests har
+       JOIN hospitals h ON h.id=har.hospital_id
+      WHERE har.advertiser_id=? AND har.hospital_id=?
+        AND har.status='approved' AND h.status='approved'
+      LIMIT 1`,
+    [sess.advertiser.id, hospitalId],
+  );
+  if (!rows.length) return res.status(403).json({ error: '관리 권한이 없는 병원입니다.' });
+  sess.selectedHospital = rows[0];
+  res.json({ ok: true, hospital: rows[0] });
+});
+
 // 세션 확인
 router.get('/me', (req: Request, res: Response) => {
   const sess: any = req.session;
@@ -476,7 +515,10 @@ router.get('/me', (req: Request, res: Response) => {
   const u = sess.user;
   res.json({
     ok: true,
-    user: { ...adv, role: u?.role || 'advertiser', user_id: u?.id, name: u?.name || adv.contact_name },
+    user: {
+      ...adv, role: u?.role || 'advertiser', user_id: u?.id, name: u?.name || adv.contact_name,
+      selected_hospital: sess.selectedHospital || null,
+    },
   });
 });
 

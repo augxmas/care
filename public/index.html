@@ -2,696 +2,157 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>모즈클리닉 청담 | 프리미엄 줄기세포 테라피 (MODS Clinic Stem Cell Center)</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Noto Sans KR & Playfair Display for Luxury Typography -->
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="서울 청담 모즈클리닉에서 만나는 여행과 뷰티. 태국 고객을 위한 사전 상담과 맞춤 시술 안내.">
+  <title>MODS CLINIC | 서울에서 만나는 나다운 아름다움</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Noto Sans KR', sans-serif;
-    }
-    .font-luxury {
-      font-family: 'Playfair Display', 'Noto Sans KR', serif;
-    }
-    .bg-cream {
-      background-color: #faf9f6;
-    }
-    .text-gold {
-      color: #c5a880;
-    }
-    .bg-gold {
-      background-color: #c5a880;
-    }
-    .border-gold {
-      border-color: #c5a880;
-    }
-    .hover-gold:hover {
-      background-color: #b3956c;
-    }
-    .text-charcoal {
-      color: #1e2022;
-    }
-    .bg-charcoal {
-      background-color: #1e2022;
-    }
+    :root{--ink:#20211f;--muted:#696b65;--cream:#f7f5f0;--paper:#fff;--sage:#7c8978;--sage-dark:#596554;--line:#deddd6;--blush:#d7aaa0;--max:1240px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--cream);font-family:'Noto Sans KR','Noto Sans Thai',sans-serif;word-break:keep-all}a{color:inherit;text-decoration:none}button{font:inherit}.wrap{width:min(var(--max),calc(100% - 48px));margin:auto}
+    .top-note{background:#29302a;color:#f5f3ec;text-align:center;padding:9px 20px;font-size:12px;letter-spacing:.06em}.header{position:sticky;top:0;z-index:50;background:rgba(247,245,240,.93);backdrop-filter:blur(16px);border-bottom:1px solid rgba(32,33,31,.09)}.nav{height:78px;display:flex;align-items:center;gap:34px}.brand{display:flex;flex-direction:column;line-height:1}.brand strong{font-family:'DM Serif Display',serif;font-size:27px;letter-spacing:.09em}.brand span{font-size:9px;letter-spacing:.28em;color:var(--sage-dark);margin-top:7px}.links{margin-left:auto;display:flex;gap:28px;font-size:13px;font-weight:600}.links a:hover{color:var(--sage-dark)}.lang{position:relative}.lang-btn{border:1px solid #c9cbc3;background:transparent;border-radius:99px;padding:9px 14px;cursor:pointer;font-size:12px}.lang-menu{display:none;position:absolute;right:0;top:44px;min-width:120px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 15px 35px rgba(0,0,0,.12)}.lang.open .lang-menu{display:block}.lang-menu button{width:100%;border:0;background:none;padding:9px 12px;text-align:left;border-radius:8px;cursor:pointer}.lang-menu button:hover,.lang-menu button.active{background:#eef0eb;color:var(--sage-dark)}
+    .hero{min-height:740px;display:grid;align-items:center;background-image:linear-gradient(90deg,rgba(247,245,240,.98) 0%,rgba(247,245,240,.93) 34%,rgba(247,245,240,.15) 64%,rgba(247,245,240,.05)),url('/assets/home/mods-seoul-beauty-hero.png');background-size:cover;background-position:center}.hero-copy{width:min(620px,54%);padding:86px 0}.eyebrow{display:flex;align-items:center;gap:12px;color:var(--sage-dark);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}.eyebrow:before{content:'';width:32px;height:1px;background:var(--sage)}h1{font-family:'DM Serif Display','Noto Sans KR','Noto Sans Thai',serif;font-size:clamp(48px,5.7vw,82px);line-height:1.04;font-weight:400;letter-spacing:-.035em;margin:24px 0}.hero h1 em{color:var(--sage-dark);font-weight:400}.lead{font-size:17px;line-height:1.9;color:#555851;max-width:570px}.actions{display:flex;gap:12px;margin-top:34px}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 24px;border-radius:99px;font-size:13px;font-weight:700;transition:.2s;border:1px solid transparent}.btn-dark{background:var(--ink);color:#fff}.btn-dark:hover{background:var(--sage-dark);transform:translateY(-2px)}.btn-light{border-color:#b8bbb3;background:rgba(255,255,255,.55)}.btn-light:hover{background:#fff}.trust{display:flex;gap:28px;margin-top:52px;padding-top:25px;border-top:1px solid rgba(32,33,31,.15);font-size:12px;color:#5e625b}.trust span{display:flex;align-items:center;gap:8px}.trust i{width:6px;height:6px;border-radius:50%;background:var(--sage)}
+    section{padding:110px 0}.intro{background:#fff}.section-head{display:grid;grid-template-columns:.8fr 1.2fr;gap:60px;align-items:start}.kicker{font-size:11px;letter-spacing:.18em;color:var(--sage-dark);font-weight:700}.section-head h2,.center-head h2{font-family:'DM Serif Display','Noto Sans KR','Noto Sans Thai',serif;font-weight:400;font-size:clamp(35px,4vw,57px);line-height:1.15;margin:15px 0}.section-copy{color:var(--muted);font-size:16px;line-height:2}.quote{margin-top:65px;display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:24px;overflow:hidden}.quote article{padding:34px;border-right:1px solid var(--line)}.quote article:last-child{border:0}.quote b{display:block;font-family:'DM Serif Display',serif;color:var(--sage-dark);font-size:25px;font-weight:400;margin-bottom:10px}.quote p{margin:0;color:var(--muted);font-size:13px;line-height:1.8}
+    .programs{background:#edf0eb}.center-head{text-align:center;max-width:760px;margin:0 auto 48px}.center-head p{color:var(--muted);line-height:1.8}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:#fff;border-radius:20px;padding:34px;min-height:285px;position:relative;overflow:hidden;transition:.25s}.card:hover{transform:translateY(-5px);box-shadow:0 20px 45px rgba(45,52,45,.1)}.card-no{font-family:'DM Serif Display',serif;color:#c9cfc7;font-size:42px}.card h3{font-size:20px;margin:24px 0 12px}.card p{color:var(--muted);font-size:13px;line-height:1.8;margin:0}.card .tag{position:absolute;bottom:25px;left:34px;font-size:10px;letter-spacing:.12em;color:var(--sage-dark);font-weight:700}
+    .journey{background:#232824;color:#f3f1eb}.journey-grid{display:grid;grid-template-columns:1fr 1fr;gap:90px;align-items:center}.journey .kicker{color:#b7c2b2}.journey h2{font-family:'DM Serif Display','Noto Sans KR','Noto Sans Thai',serif;font-size:clamp(38px,4vw,58px);font-weight:400;line-height:1.15;margin:17px 0 24px}.journey-copy>p{color:#c5c9c3;line-height:1.9}.steps{display:grid;gap:0}.step{display:grid;grid-template-columns:54px 1fr;gap:20px;padding:25px 0;border-bottom:1px solid rgba(255,255,255,.13)}.step-num{width:42px;height:42px;border:1px solid #768075;border-radius:50%;display:grid;place-items:center;font-family:'DM Serif Display',serif;color:#d8ddd4}.step h3{font-size:15px;margin:0 0 7px}.step p{color:#9fa69e;font-size:12px;line-height:1.7;margin:0}
+    .proof{background:#fff}.proof-box{border-radius:30px;padding:70px;background:linear-gradient(120deg,#ece7de,#f6f4ee);display:grid;grid-template-columns:1.1fr .9fr;gap:70px;align-items:center}.proof h2{font-family:'DM Serif Display','Noto Sans KR','Noto Sans Thai',serif;font-size:clamp(37px,4vw,56px);font-weight:400;margin:12px 0 23px;line-height:1.18}.proof p{color:var(--muted);line-height:1.95}.proof-points{display:grid;gap:14px}.proof-point{background:rgba(255,255,255,.68);border:1px solid rgba(255,255,255,.8);border-radius:15px;padding:18px 20px}.proof-point b{display:block;font-size:14px;margin-bottom:5px}.proof-point span{font-size:12px;color:var(--muted)}
+    .cta{padding:0 0 110px;background:#fff}.cta-box{background:var(--sage-dark);border-radius:28px;color:#fff;text-align:center;padding:78px 30px}.cta h2{font-family:'DM Serif Display','Noto Sans KR','Noto Sans Thai',serif;font-size:clamp(37px,4vw,55px);font-weight:400;margin:0 0 18px}.cta p{color:#dce1da;line-height:1.8}.cta .btn{background:#fff;color:var(--sage-dark);margin-top:20px}
+    footer{background:#191c19;color:#a9ada8;padding:55px 0}.foot{display:grid;grid-template-columns:1fr auto;gap:40px}.foot-brand{font-family:'DM Serif Display',serif;font-size:25px;letter-spacing:.08em;color:#fff}.foot p{font-size:11px;line-height:1.9;margin:15px 0 0}.foot-links{display:flex;gap:18px;font-size:12px;color:#d9dcd8}.mobile-menu{display:none}
+    @media(max-width:900px){.links{display:none}.hero{min-height:700px;background-position:63% center}.hero-copy{width:70%}.section-head,.journey-grid,.proof-box{grid-template-columns:1fr;gap:35px}.cards{grid-template-columns:1fr 1fr}.quote{grid-template-columns:1fr}.quote article{border-right:0;border-bottom:1px solid var(--line)}.proof-box{padding:45px}.mobile-menu{display:block;margin-left:auto}.nav>.lang{margin-left:0}}
+    @media(max-width:620px){.wrap{width:min(100% - 32px,var(--max))}.nav{height:68px;gap:12px}.brand strong{font-size:22px}.header .btn{display:none}.hero{min-height:760px;align-items:end;background-image:linear-gradient(0deg,rgba(247,245,240,1) 0%,rgba(247,245,240,.95) 41%,rgba(247,245,240,.05) 72%),url('/assets/home/mods-seoul-beauty-hero.png');background-position:65% top;background-size:auto 56%,auto 56%;background-repeat:no-repeat}.hero-copy{width:100%;padding:330px 0 55px}.hero h1{font-size:45px}.lead{font-size:14px}.actions{flex-direction:column}.trust{gap:10px;flex-wrap:wrap;margin-top:30px}.trust span{width:100%}section{padding:78px 0}.cards{grid-template-columns:1fr}.card{min-height:250px}.proof-box{padding:32px 24px}.cta{padding-bottom:78px}.cta-box{padding:55px 22px}.foot{grid-template-columns:1fr}.foot-links{flex-wrap:wrap}}
   </style>
 </head>
-<body class="bg-cream text-charcoal min-height-screen flex flex-col selection:bg-[#c5a880] selection:text-white">
-
-  <!-- Header -->
-  <header class="sticky top-0 z-50 bg-[#faf9f6]/90 backdrop-blur-md border-b border-stone-200">
-    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-3">
-        <span class="font-luxury text-2xl font-bold tracking-widest text-stone-800">MODS<span class="text-gold font-light"> CLINIC</span></span>
-      </a>
-      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-stone-600">
-        <a href="#why-mods" class="hover:text-gold transition-colors">줄기세포 강점</a>
-        <a href="#cell-lab" class="hover:text-gold transition-colors">원내 연구소 (Cell Lab)</a>
-        <a href="#programs" class="hover:text-gold transition-colors">핵심 시술</a>
-        <a href="#concierge" class="hover:text-gold transition-colors">VIP 컨시어지</a>
+<body>
+  <div class="top-note" data-i18n="topNote">서울 여행 전, 온라인 상담으로 나에게 맞는 뷰티 플랜을 준비하세요.</div>
+  <header class="header">
+    <div class="wrap nav">
+      <a class="brand" href="/"><strong>MODS</strong><span>CLINIC · SEOUL</span></a>
+      <nav class="links">
+        <a href="#story" data-i18n="navStory">서울 뷰티 여행</a><a href="#programs" data-i18n="navPrograms">시술 프로그램</a><a href="#journey" data-i18n="navJourney">상담·예약 과정</a><a href="#trust" data-i18n="navTrust">모즈의 신뢰</a><a href="/notices" data-i18n="navNotices">공지사항</a>
       </nav>
-      <div>
-        <a href="#inquiry" class="bg-gold text-white px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider hover-gold transition-all shadow-md shadow-amber-900/10">
-          실시간 VIP 상담 신청
-        </a>
+      <a class="btn btn-dark" href="/consult?h=3" data-i18n="navConsult">온라인 상담</a>
+      <div class="lang" id="langPicker">
+        <button type="button" class="lang-btn" id="langBtn" aria-haspopup="true" aria-expanded="false">한국어 ▾</button>
+        <div class="lang-menu"><button type="button" data-lang="ko">한국어</button><button type="button" data-lang="th">ไทย</button></div>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="relative overflow-hidden py-20 lg:py-32 border-b border-stone-200/50">
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-100/30 via-cream to-cream -z-10"></div>
-    <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center">
-      <!-- Left text -->
-      <div class="lg:col-span-7 space-y-8">
-        <span class="inline-block bg-[#f3efe8] text-stone-700 text-xs font-semibold px-4 py-1.5 rounded-full uppercase tracking-widest">
-          MODS CLINIC CHEONGDAM • SEOUL
-        </span>
-        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-stone-900">
-          서울 청담동에서 경험하는<br>
-          <span class="font-luxury text-gold italic font-normal">최상위 줄기세포</span> 안티에이징
-        </h1>
-        <p class="text-stone-600 text-base sm:text-lg max-w-xl leading-relaxed">
-          대한민국의 고도화된 의술과 프리미엄 줄기세포 공학의 만남. 15년 이상의 풍부한 노하우를 지닌 모즈클리닉 전담 의료진이 태국 고객님들의 젊음과 신체 재생을 위한 명품 솔루션을 제공합니다.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4">
-          <a href="#inquiry" class="bg-charcoal text-white hover:bg-stone-800 px-8 py-4 rounded-xl text-sm font-semibold tracking-wide text-center transition-all shadow-lg shadow-stone-950/20">
-            상담 및 정밀 예약하기
-          </a>
-          <a href="#why-mods" class="border border-stone-300 hover:border-gold hover:text-gold text-stone-700 px-8 py-4 rounded-xl text-sm font-semibold tracking-wide text-center transition-all">
-            모즈의 기술력 자세히 보기
-          </a>
-        </div>
-        
-        <!-- Trust indicators -->
-        <div class="grid grid-cols-3 gap-6 pt-6 border-t border-stone-200">
-          <div>
-            <p class="text-2xl font-bold text-stone-950 font-luxury">15<span class="text-gold">+</span></p>
-            <p class="text-xs text-stone-500 font-medium">안티에이징 숙련경력 (년)</p>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-stone-950 font-luxury">95<span class="text-gold">%</span></p>
-            <p class="text-xs text-stone-500 font-medium">줄기세포 최상의 세포 생착률</p>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-stone-950 font-luxury">1:1</p>
-            <p class="text-xs text-stone-500 font-medium">태국 전담 의료 통역 케어</p>
-          </div>
-        </div>
+  <main>
+    <section class="hero">
+      <div class="wrap"><div class="hero-copy">
+        <div class="eyebrow" data-i18n="heroEyebrow">Beauty trip to Cheongdam, Seoul</div>
+        <h1 data-i18n-html="heroTitle">서울을 즐기고,<br><em>나다운 아름다움</em>을 만나다.</h1>
+        <p class="lead" data-i18n="heroLead">한국에 오기 전 간단한 온라인 상담과 예약을 준비하세요. 서울의 문화와 여행을 충분히 즐기면서, 나에게 꼭 맞는 뷰티 케어까지 편안하게 경험할 수 있습니다.</p>
+        <div class="actions"><a class="btn btn-dark" href="/consult?h=3" data-i18n="heroCta">여행 전 상담 시작하기</a><a class="btn btn-light" href="#programs" data-i18n="heroMore">프로그램 둘러보기</a></div>
+        <div class="trust"><span><i></i><b data-i18n="trust1">청담동 프리미엄 클리닉</b></span><span><i></i><b data-i18n="trust2">개인별 맞춤 디자인</b></span><span><i></i><b data-i18n="trust3">외국인 고객 상담</b></span></div>
+      </div></div>
+    </section>
+
+    <section class="intro" id="story"><div class="wrap">
+      <div class="section-head"><div><div class="kicker">SEOUL BEAUTY JOURNEY</div><h2 data-i18n-html="storyTitle">여행의 설렘에<br>아름다움을 더하는 시간</h2></div><div class="section-copy" data-i18n-html="storyCopy">K-뷰티를 경험하기 위해 한국을 찾는 일은 이제 세계적으로 자연스러운 여행 방식이 되었습니다. 복잡한 수술이 아니어도 피부 컨디션, 얼굴선, 볼륨과 탄력을 세심하게 다듬는 짧은 시술로 여행의 만족을 더할 수 있습니다.<br><br>입국 전에 원하는 모습과 여행 일정을 알려주세요. 충분한 사전 상담을 통해 무리 없는 시술과 회복 계획을 준비하면, 서울의 문화와 미식을 즐기면서 한층 더 자신감 있는 모습으로 돌아갈 수 있습니다.</div></div>
+      <div class="quote"><article><b data-i18n="valueTitle1">Plan before arrival</b><p data-i18n="valueCopy1">방문 전 상담으로 고민, 일정, 선호 시술을 미리 확인합니다.</p></article><article><b data-i18n="valueTitle2">Beauty in your rhythm</b><p data-i18n="valueCopy2">여행을 방해하지 않는 범위에서 개인별 뷰티 플랜을 제안합니다.</p></article><article><b data-i18n="valueTitle3">Enjoy Seoul fully</b><p data-i18n="valueCopy3">청담에서의 케어와 서울의 문화·쇼핑·미식을 함께 즐겨보세요.</p></article></div>
+    </div></section>
+
+    <section class="programs" id="programs"><div class="wrap">
+      <div class="center-head"><div class="kicker">SIGNATURE BEAUTY</div><h2 data-i18n="programTitle">여성 고객이 많이 찾는 뷰티 프로그램</h2><p data-i18n="programLead">피부 상태와 얼굴의 균형, 여행 일정에 따라 의료진 상담 후 적합한 방법을 안내합니다.</p></div>
+      <div class="cards">
+        <article class="card"><div class="card-no">01</div><h3 data-i18n="p1Title">리프팅 & 탄력</h3><p data-i18n="p1Copy">처짐과 탄력 저하를 세심하게 살펴 자연스럽고 정돈된 인상을 위한 맞춤 리프팅을 제안합니다.</p><span class="tag">LIFTING · FIRMING</span></article>
+        <article class="card"><div class="card-no">02</div><h3 data-i18n="p2Title">V라인 & 얼굴 윤곽</h3><p data-i18n="p2Copy">얼굴형과 근육, 지방의 균형을 고려해 매끄럽고 세련된 페이스 라인을 디자인합니다.</p><span class="tag">V-LINE · CONTOUR</span></article>
+        <article class="card"><div class="card-no">03</div><h3 data-i18n="p3Title">필러 & 보톡스</h3><p data-i18n="p3Copy">과하지 않은 볼륨과 표정의 자연스러움을 중요하게 생각하는 섬세한 쁘띠 케어입니다.</p><span class="tag">FILLER · BOTOX</span></article>
+        <article class="card"><div class="card-no">04</div><h3 data-i18n="p4Title">스킨 퀄리티 케어</h3><p data-i18n="p4Copy">민감성, 수분, 모공, 색소와 피부결 등 현재 피부 고민에 맞춘 맑고 건강한 피부 관리입니다.</p><span class="tag">SKIN · GLOW</span></article>
+        <article class="card"><div class="card-no">05</div><h3 data-i18n="p5Title">얼굴 볼륨 디자인</h3><p data-i18n="p5Copy">개인의 얼굴 비율을 존중하며 필요한 부분에 부드러운 입체감과 생기를 더합니다.</p><span class="tag">VOLUME · BALANCE</span></article>
+        <article class="card"><div class="card-no">06</div><h3 data-i18n="p6Title">바디 라인 & 탄력</h3><p data-i18n="p6Copy">팔, 복부, 허벅지 등 신경 쓰이는 부위의 라인과 탄력을 위한 선택형 바디 프로그램입니다.</p><span class="tag">BODY · CONTOUR</span></article>
       </div>
-      
-      <!-- Right image placeholder / visual graphic -->
-      <div class="lg:col-span-5 relative">
-        <div class="aspect-square bg-gradient-to-tr from-stone-200 via-stone-100 to-amber-100/50 rounded-2xl border border-stone-300/60 p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden">
-          <!-- Background clean geometric pattern -->
-          <div class="absolute inset-0 opacity-5">
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="black" stroke-width="1"/>
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-            </svg>
-          </div>
-          
-          <div class="z-10 flex justify-between items-start">
-            <span class="font-luxury text-sm font-semibold tracking-wider text-stone-400">AUTHENTIC REGENERATION</span>
-            <div class="bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gold tracking-widest uppercase border border-amber-200">MODS CELL LAB</div>
-          </div>
-          
-          <!-- Elegant medical-styled visual graphic -->
-          <div class="z-10 my-auto text-center space-y-4 py-8">
-            <div class="w-20 h-20 mx-auto rounded-full bg-cream border border-gold flex items-center justify-center shadow-lg shadow-gold/10">
-              <svg class="w-10 h-10 text-gold animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
-              </svg>
-            </div>
-            <div class="space-y-1">
-              <h3 class="text-lg font-bold text-stone-800">모즈 원내 줄기세포 연구소</h3>
-              <p class="text-xs text-stone-500">Class 100 무균 추출 및 신선 보관 기술</p>
-            </div>
-          </div>
-          
-          <div class="z-10 bg-stone-900 text-cream p-4 rounded-xl border border-stone-800 flex items-center justify-between shadow-xl">
-            <div class="flex items-center gap-3">
-              <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
-              <div class="text-left">
-                <p class="text-[10px] text-stone-400 uppercase tracking-widest font-semibold">Live Lab Viability</p>
-                <p class="text-sm font-bold font-luxury">95.8% Cell Survival Rate</p>
-              </div>
-            </div>
-            <span class="text-gold text-xs font-bold font-luxury">APPROVED</span>
-          </div>
-        </div>
-      </div>
+    </div></section>
+
+    <section class="journey" id="journey"><div class="wrap journey-grid">
+      <div class="journey-copy"><div class="kicker">BEFORE YOU FLY</div><h2 data-i18n-html="journeyTitle">한국에 오기 전부터<br>편안하게 준비하세요.</h2><p data-i18n="journeyCopy">낯선 나라에서의 시술이 걱정되지 않도록 방문 목적과 일정을 먼저 듣고 준비합니다. 상담 내용은 의료진의 대면 진료를 대신하지 않으며, 최종 시술은 내원 후 상태를 확인해 결정합니다.</p><a class="btn btn-light" style="color:#fff;border-color:#737b72;margin-top:20px" href="/consult?h=3" data-i18n="journeyCta">온라인 상담 연결</a></div>
+      <div class="steps"><div class="step"><div class="step-num">1</div><div><h3 data-i18n="step1Title">온라인 사전 상담</h3><p data-i18n="step1Copy">고민 부위, 원하는 변화, 한국 체류 일정을 편하게 알려주세요.</p></div></div><div class="step"><div class="step-num">2</div><div><h3 data-i18n="step2Title">맞춤 일정 제안</h3><p data-i18n="step2Copy">여행 동선과 회복 시간을 고려해 상담·예약 일정을 안내합니다.</p></div></div><div class="step"><div class="step-num">3</div><div><h3 data-i18n="step3Title">청담 모즈클리닉 방문</h3><p data-i18n="step3Copy">내원 후 의료진이 상태를 확인하고 적합한 방법과 주의사항을 설명합니다.</p></div></div><div class="step"><div class="step-num">4</div><div><h3 data-i18n="step4Title">서울 여행과 애프터케어</h3><p data-i18n="step4Copy">안내받은 주의사항을 지키며 서울에서의 특별한 시간을 즐기세요.</p></div></div></div>
+    </div></section>
+
+    <section class="proof" id="trust"><div class="wrap"><div class="proof-box">
+      <div><div class="kicker">TRUSTED BY ASIA</div><h2 data-i18n-html="proofTitle">다시 찾는 고객이 말해주는<br>모즈의 신뢰</h2><p data-i18n="proofCopy">모즈클리닉에는 일본과 중국을 비롯한 해외 고객의 방문이 이어지고 있으며, 다시 찾아주시는 고객이 많은 검증된 의료기관입니다. 이제 그 경험을 바탕으로 태국 여성의 얼굴 특징과 피부 고민, 여행 방식에 맞춘 서비스를 본격적으로 준비합니다. 태국 고객 한 분 한 분이 안심하고 아름다움을 발견할 수 있도록 세심하게 듣겠습니다.</p></div>
+      <div class="proof-points"><div class="proof-point"><b data-i18n="proof1Title">아시아 고객 진료 경험</b><span data-i18n="proof1Copy">일본·중국 등 다양한 해외 고객과 쌓아온 상담 경험</span></div><div class="proof-point"><b data-i18n="proof2Title">높은 재방문 신뢰</b><span data-i18n="proof2Copy">한 번의 방문을 넘어 지속적인 관계로 이어지는 케어</span></div><div class="proof-point"><b data-i18n="proof3Title">태국 고객 맞춤 서비스</b><span data-i18n="proof3Copy">얼굴 특징, 피부 고민과 여행 일정을 고려한 세심한 제안</span></div></div>
+    </div></div></section>
+
+    <section class="cta"><div class="wrap"><div class="cta-box"><h2 data-i18n="ctaTitle">당신의 서울 뷰티 여행은 상담에서 시작됩니다.</h2><p data-i18n-html="ctaCopy">궁금한 시술과 한국 방문 일정을 알려주세요.<br>모즈클리닉이 편안한 첫걸음을 함께 준비하겠습니다.</p><a class="btn" href="/consult?h=3" data-i18n="ctaButton">지금 상담하기</a></div></div></section>
+  </main>
+
+  <footer><div class="wrap foot"><div><div class="foot-brand">MODS CLINIC</div><p data-i18n-html="footerInfo">서울특별시 강남구 압구정로80길 33, 2층 (청담동, 아트빌딩)<br>의료기관명: 모즈의원 · 대표번호: 02-545-1618<br>© MODS CLINIC. All Rights Reserved.</p></div><div class="foot-links"><a href="/consult?h=3" data-i18n="footerConsult">온라인 상담</a><a href="https://www.modsclinic.co.kr/bbs/content.php?co_id=location" target="_blank" rel="noopener" data-i18n="footerLocation">오시는 길</a><a href="/admin" data-i18n="footerAdmin">관리자</a></div></div></footer>
+
+  <div id="campaignLaunchPopup" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(17,20,18,.72);backdrop-filter:blur(6px);padding:22px;align-items:center;justify-content:center">
+    <div id="campaignLaunchBox" style="position:relative;width:fit-content;max-width:100%;max-height:calc(100vh - 44px);background:transparent;border-radius:14px;overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,.35)">
+      <button type="button" id="campaignLaunchClose" aria-label="팝업 닫기" style="position:absolute;z-index:2;right:10px;top:10px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(20,24,21,.82);color:#fff;font-size:24px;cursor:pointer">×</button>
+      <a id="campaignLaunchLink" href="#" style="display:block;line-height:0"><img id="campaignLaunchImage" alt="태국 최초 회원가입 이벤트" style="display:block;width:auto;max-width:min(100%,920px);height:auto;max-height:calc(100vh - 44px);object-fit:contain;background:transparent"></a>
+      <button type="button" id="campaignHideToday" data-i18n="campaignHideToday" style="position:absolute;z-index:2;left:50%;bottom:12px;transform:translateX(-50%);white-space:nowrap;border:1px solid rgba(255,255,255,.7);border-radius:999px;padding:9px 18px;background:rgba(20,24,21,.82);color:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.24)">오늘 하루 안 열기</button>
     </div>
-  </section>
-
-  <!-- Why Korea & Mods Section -->
-  <section id="why-mods" class="py-24 bg-white border-b border-stone-200/50">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="text-center max-w-2xl mx-auto space-y-4 mb-16">
-        <span class="text-gold text-xs font-bold tracking-widest uppercase block">WHY MODS CLINIC & KOREA</span>
-        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
-          왜 태국 VVIP 고객들은<br>모즈클리닉 줄기세포를 선택하는가?
-        </h2>
-        <div class="w-12 h-1 bg-gold mx-auto"></div>
-        <p class="text-stone-500 text-sm leading-relaxed">
-          세계 최고 수준의 규제와 정교한 한국의 피부성형 기술, 그 중에서도 강남 청담동의 최정상에서 신뢰를 쌓아온 모즈클리닉의 줄기세포 강점입니다.
-        </p>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-8">
-        <!-- Benefit 1 -->
-        <div class="bg-cream border border-stone-200/60 p-8 rounded-2xl space-y-6 hover:shadow-xl transition-all duration-300 group">
-          <div class="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-white transition-all duration-300">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-stone-800">1. 대한민국의 선진 의료 및 검증된 안심 기술</h3>
-          <p class="text-stone-600 text-sm leading-relaxed">
-            대한민국은 우수한 줄기세포 연구 인프라와 세계 선두 수준의 의료 시스템을 갖추고 있습니다. 최신 첨단 장비와 무균 추출 규격을 준수하여 감염 및 부작용 우려가 전혀 없는 안전한 시술을 자랑합니다.
-          </p>
-        </div>
-
-        <!-- Benefit 2 -->
-        <div class="bg-cream border border-stone-200/60 p-8 rounded-2xl space-y-6 hover:shadow-xl transition-all duration-300 group">
-          <div class="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-white transition-all duration-300">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-stone-800">2. 원내 상주형 첨단 줄기세포 연구소 (Cell Lab)</h3>
-          <p class="text-stone-600 text-sm leading-relaxed">
-            모즈클리닉은 병원 내부에 국가 인증 자체 연구원과 첨단 무균 추출 시설을 직접 운영합니다. 외부 기관으로 세포를 이송하지 않고 채취 즉시 분리 및 가공함으로써 최상의 신선도와 세포 생존율을 보장합니다.
-          </p>
-        </div>
-
-        <!-- Benefit 3 -->
-        <div class="bg-cream border border-stone-200/60 p-8 rounded-2xl space-y-6 hover:shadow-xl transition-all duration-300 group">
-          <div class="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-white transition-all duration-300">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-stone-800">3. 뷰티·안티에이징 극대화를 위한 맞춤형 디자인</h3>
-          <p class="text-stone-600 text-sm leading-relaxed">
-            단순히 영양분을 투여하는 것을 넘어, 환자의 지방에서 분리한 고순도 SVF 및 지방 줄기세포를 정밀 정맥/안면 투여하여 처진 콜라겐 섬유를 근본적으로 되살리고 맑고 탄력 있는 동안 얼굴을 완성합니다.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Cell Lab Feature Section -->
-  <section id="cell-lab" class="py-24 bg-cream border-b border-stone-200/50">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="grid lg:grid-cols-2 gap-16 items-center">
-        <!-- Lab image description graphic -->
-        <div class="space-y-6">
-          <div class="bg-stone-900 text-white rounded-3xl p-8 lg:p-12 space-y-8 shadow-2xl relative overflow-hidden">
-            <div class="absolute -right-16 -top-16 w-48 h-48 bg-gold/10 rounded-full blur-2xl"></div>
-            
-            <div class="space-y-2">
-              <span class="text-gold text-xs font-bold uppercase tracking-widest font-luxury">MODS LABORATORY STANDARD</span>
-              <h3 class="text-3xl font-bold font-luxury">State-Of-The-Art Cell Lab</h3>
-            </div>
-            
-            <p class="text-stone-400 text-sm leading-relaxed">
-              모즈의 줄기세포는 '자가 지방 유래 줄기세포(ADSC)'와 핵심 성장인자 복합체인 SVF(Stromal Vascular Fraction)를 기반으로 합니다. 원내 첨단 생명공학 시스템을 통해 오염률 0.0%의 절대 무균 환경에서 고순도 세포만을 추출합니다.
-            </p>
-            
-            <!-- Bullet processes -->
-            <div class="space-y-4">
-              <div class="flex gap-4 items-start">
-                <span class="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-gold text-xs font-bold font-luxury mt-0.5">01</span>
-                <div>
-                  <h4 class="text-stone-200 font-bold text-sm">무균 폐쇄식 추출 공정 (Closed Sterile Isolation)</h4>
-                  <p class="text-stone-400 text-xs mt-1">외부 공기와의 접촉을 완벽히 차단하여 감염 확률을 원천 제거합니다.</p>
-                </div>
-              </div>
-              <div class="flex gap-4 items-start">
-                <span class="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-gold text-xs font-bold font-luxury mt-0.5">02</span>
-                <div>
-                  <h4 class="text-stone-200 font-bold text-sm">SVF(기질혈관분획) 고순도 추출</h4>
-                  <p class="text-stone-400 text-xs mt-1">혈관 내피세포, 콜라겐 유도 인자, 조직 재생 줄기세포를 고르게 함유합니다.</p>
-                </div>
-              </div>
-              <div class="flex gap-4 items-start">
-                <span class="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-gold text-xs font-bold font-luxury mt-0.5">03</span>
-                <div>
-                  <h4 class="text-stone-200 font-bold text-sm">실시간 세포수 & 생존도 카운팅 검증</h4>
-                  <p class="text-stone-400 text-xs mt-1">시술 직전 현미경 검사를 통해 95% 이상의 실재 생존 세포수를 리포트합니다.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Lab Copy -->
-        <div class="space-y-8">
-          <span class="text-gold text-xs font-bold tracking-widest uppercase block">TECHNOLOGY & SAFETY FIRST</span>
-          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
-            타협하지 않는 무균 추출 솔루션,<br>자체 원내 바이오 연구실
-          </h2>
-          <p class="text-stone-600 text-base leading-relaxed">
-            줄기세포는 추출 후 즉시 산소 및 환경 변화에 민감하게 반응하여 품질이 저하되기 쉽습니다. 모즈클리닉 청담 본점은 원내 전문 상주 연구진이 시술 직전 고순도 정밀 분리를 시행하여 최적의 효능을 즉각 체내에 이식합니다.
-          </p>
-          <p class="text-stone-600 text-base leading-relaxed">
-            태국 현지에서는 접하기 힘든 철저한 규격과 안전 등급의 크린룸에서 추출되어, 전신 정맥 주사 시 미세 혈관 부작용이나 면역 거부 반응이 전혀 없어 안심하실 수 있습니다.
-          </p>
-          <div class="pt-4">
-            <blockquote class="border-l-4 border-gold pl-4 text-stone-500 italic text-sm">
-              "모즈의 모든 줄기세포 시술은 식약처 가이드라인을 엄격히 준수하며 환자 본인의 순수 자가 조직만을 사용하여 가장 안전합니다."
-            </blockquote>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Core Programs Section -->
-  <section id="programs" class="py-24 bg-white border-b border-stone-200/50">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="text-center max-w-2xl mx-auto space-y-4 mb-16">
-        <span class="text-gold text-xs font-bold tracking-widest uppercase block">SIGNATURE TREATMENT</span>
-        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
-          모즈클리닉의 3대 핵심 줄기세포 테라피
-        </h2>
-        <div class="w-12 h-1 bg-gold mx-auto"></div>
-        <p class="text-stone-500 text-sm">
-          신체 전반의 항노화 개선부터 국소 부위의 완벽한 피부 장벽 재건과 고생착 볼륨 증대 프로그램입니다.
-        </p>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-8">
-        <!-- Program 1 -->
-        <div class="border border-stone-200 rounded-3xl overflow-hidden flex flex-col justify-between hover:shadow-2xl transition-all duration-300">
-          <div class="p-8 space-y-6">
-            <div class="bg-[#faf9f6] p-4 rounded-2xl inline-block border border-stone-200">
-              <svg class="w-8 h-8 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-              </svg>
-            </div>
-            <div class="space-y-2">
-              <h3 class="text-2xl font-bold text-stone-900">줄기세포 전신 정맥 주사</h3>
-              <p class="text-xs text-gold font-bold uppercase tracking-wider">Systemic IV Stem Cell Regeneration</p>
-            </div>
-            <p class="text-stone-600 text-sm leading-relaxed">
-              혈액 순환계와 모세혈관망 전체에 수천만 개의 신선한 줄기세포를 직접 투여하여 손상된 전신 장기 세포를 재생하고 면역 체계를 재정비합니다. 만성 피로와 피부 장벽 및 노화 예방에 우수한 효과를 발휘합니다.
-            </p>
-            <ul class="space-y-2 text-xs text-stone-500 font-medium">
-              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 전신 에너지 및 면역력의 원초적 증대</li>
-              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 혈관 청소 및 모세 혈관망 재생 촉진</li>
-              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 만성 스트레스 및 불면증, 만성 피로 해소</li>
-            </ul>
-          </div>
-          <div class="bg-[#faf9f6] border-t border-stone-100 p-6">
-            <a href="#inquiry" class="block w-full text-center bg-charcoal text-white hover:bg-stone-800 py-3 rounded-xl text-xs font-semibold tracking-wider transition-colors">프로그램 가격 및 상담 문의</a>
-          </div>
-        </div>
-
-        <!-- Program 2 -->
-        <div class="border border-stone-200 rounded-3xl overflow-hidden flex flex-col justify-between hover:shadow-2xl transition-all duration-300">
-          <div class="p-8 space-y-6">
-            <div class="bg-[#faf9f6] p-4 rounded-2xl inline-block border border-stone-200">
-              <svg class="w-8 h-8 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <div class="space-y-2">
-              <h3 class="text-2xl font-bold text-stone-900">줄기세포 피부 시술 & 스킨부스터</h3>
-              <p class="text-xs text-gold font-bold uppercase tracking-wider">Autologous Stem Cell Skin Booster</p>
-            </div>
-            <p class="text-stone-600 text-sm leading-relaxed">
-              환자 본인의 신선한 줄기세포와 콜라겐 재생 활성 인자인 SVF를 고농축으로 정밀 배합하여 미세 주사 투여합니다. 노화되어 얇아진 진피층을 건강하게 증식시키며 색소 질환, 탄력 저하를 근본적 개선합니다.
-            </p>
-            <ul class="space-y-2 text-xs text-stone-500 font-medium">
-              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 모공 크기 리사이징 및 미세 주름 즉시 완화</li>
-              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 콜라겐, 엘라스틴 합성 속도 3.5배 가속화</li>
-              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 칙칙한 피부 톤 개선과 자연스러운 윤광</li>
-            </ul>
-          </div>
-          <div class="bg-[#faf9f6] border-t border-stone-100 p-6">
-            <a href="#inquiry" class="block w-full text-center bg-charcoal text-white hover:bg-stone-800 py-3 rounded-xl text-xs font-semibold tracking-wider transition-colors">프로그램 가격 및 상담 문의</a>
-          </div>
-        </div>
-
-        <!-- Program 3 -->
-        <div class="border border-stone-200 rounded-3xl overflow-hidden flex flex-col justify-between hover:shadow-2xl transition-all duration-300">
-          <div class="p-8 space-y-6">
-            <div class="bg-[#faf9f6] p-4 rounded-2xl inline-block border border-stone-200">
-              <svg class="w-8 h-8 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-              </svg>
-            </div>
-            <div class="space-y-2">
-              <h3 class="text-2xl font-bold text-stone-900">줄기세포 하이브리드 지방이식</h3>
-              <p class="text-xs text-gold font-bold uppercase tracking-wider">Stem Cell Hybrid Fat Grafting</p>
-            </div>
-            <p class="text-stone-600 text-sm leading-relaxed">
-              일반 지방이식이 30~40% 미만의 낮은 생착률로 울퉁불퉁해지는 단점을 획기적으로 해결했습니다. 줄기세포와 순수 지방세포를 황금 비율로 믹싱하여 90% 이상의 경이로운 생착률과 영구적인 볼륨감을 선사합니다.
-            </p>
-            <ul class="space-y-2 text-xs text-stone-500 font-medium">
-              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 꺼진 이마, 볼, 팔자 주름에 자연스러운 윤곽감</li>
-              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 일반 지방이식 대비 생착 유지기간 무제한 영구적</li>
-              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 이식 부위 피부의 탄력 개선 및 안티에이징</li>
-            </ul>
-          </div>
-          <div class="bg-[#faf9f6] border-t border-stone-100 p-6">
-            <a href="#inquiry" class="block w-full text-center bg-charcoal text-white hover:bg-stone-800 py-3 rounded-xl text-xs font-semibold tracking-wider transition-colors">프로그램 가격 및 상담 문의</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- VIP Concierge Program Section -->
-  <section id="concierge" class="py-24 bg-cream border-b border-stone-200/50">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="grid lg:grid-cols-2 gap-16 items-center">
-        <!-- Text -->
-        <div class="space-y-8">
-          <span class="text-gold text-xs font-bold tracking-widest uppercase block">EXCLUSIVE FOR THAI PATIENTS</span>
-          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
-            태국 VIP 고객님을 위한<br>모즈만의 전용 프리미엄 프리빌리지
-          </h2>
-          <p class="text-stone-600 text-base leading-relaxed">
-            언어의 벽이나 낯선 국가에서의 걱정 없이, 오롯이 젊어지는 여정에만 몰입할 수 있도록 모즈클리닉이 아낌없는 VIP 케어 서비스를 준비했습니다.
-          </p>
-          
-          <div class="grid sm:grid-cols-2 gap-6 pt-4">
-            <div class="space-y-2">
-              <h4 class="font-bold text-stone-800 flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 1:1 전담 태국어 통역
-              </h4>
-              <p class="text-stone-500 text-xs leading-relaxed">태국인 전담 실장과 메디컬 통역사가 입국 시점부터 출국, 그리고 귀국 후 사후 관리 피드백까지 1:1로 원활하게 조율해 드립니다.</p>
-            </div>
-            <div class="space-y-2">
-              <h4 class="font-bold text-stone-800 flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 프라이빗 VIP 리커버리 룸
-              </h4>
-              <p class="text-stone-500 text-xs leading-relaxed">타인과 마주치지 않고 온전한 프라이버시를 누릴 수 있도록 독채 전용 스위트룸 형태의 회복실을 제공합니다.</p>
-            </div>
-            <div class="space-y-2">
-              <h4 class="font-bold text-stone-800 flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 프리미엄 리무진 픽업 & 샌딩
-              </h4>
-              <p class="text-stone-500 text-xs leading-relaxed">공항 도착 즉시 의전 비히클을 통해 병원 및 청담동 호텔까지 안전하게 에스코트해 드리며 최고의 편리함을 선사합니다.</p>
-            </div>
-            <div class="space-y-2">
-              <h4 class="font-bold text-stone-800 flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-gold"></span> 체계적인 웰니스 사후 관리
-              </h4>
-              <p class="text-stone-500 text-xs leading-relaxed">시술 후 줄기세포의 활성화를 가속화하는 비타민 드립, 특수 재생 레이저 및 고주파 LDM 힐링 요법을 특별 포함하여 최상의 결과를 빚어냅니다.</p>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Graphic Panel -->
-        <div class="bg-white border border-stone-200 p-8 rounded-3xl shadow-xl flex flex-col justify-between space-y-8">
-          <div>
-            <h3 class="text-xl font-bold text-stone-900 font-luxury">VVIP Care Schedule Examples</h3>
-            <p class="text-xs text-stone-500 mt-1">태국 고객님들을 위한 3박 4일 맞춤 웰니스 투어 예시</p>
-          </div>
-          
-          <div class="relative pl-8 border-l border-stone-200 space-y-6">
-            <!-- Day 1 -->
-            <div class="relative">
-              <div class="absolute -left-[41px] top-0.5 bg-gold text-white text-[10px] w-6 h-6 rounded-full flex items-center justify-center font-bold">1</div>
-              <div>
-                <h5 class="font-bold text-sm text-stone-800">1일차 - 에스코트 입국 및 안심 릴렉세이션</h5>
-                <p class="text-xs text-stone-500 mt-1">인천국제공항 럭셔리 리무진 픽업 → 숙소 입석 에스코트 → 정밀 원내 메디컬 오리엔테이션 및 혈액 정밀 수치 검사</p>
-              </div>
-            </div>
-            <!-- Day 2 -->
-            <div class="relative">
-              <div class="absolute -left-[41px] top-0.5 bg-gold text-white text-[10px] w-6 h-6 rounded-full flex items-center justify-center font-bold">2</div>
-              <div>
-                <h5 class="font-bold text-sm text-stone-800">2일차 - VIP 맞춤 줄기세포 시술</h5>
-                <p class="text-xs text-stone-500 mt-1">지방 채취 및 자체 바이오 셀랩 고농도 세포 추출 → 대표원장 집도 하에 줄기세포 전신 정맥주사 & 안면 뷰티 스킨부스터 시술 → VVIP 집중 회복실 휴식</p>
-              </div>
-            </div>
-            <!-- Day 3 -->
-            <div class="relative">
-              <div class="absolute -left-[41px] top-0.5 bg-gold text-white text-[10px] w-6 h-6 rounded-full flex items-center justify-center font-bold">3</div>
-              <div>
-                <h5 class="font-bold text-sm text-stone-800">3일차 - 애프터 레이저 재생 요법 & 하이드레이션</h5>
-                <p class="text-xs text-stone-500 mt-1">붓기 완화 전문 디톡스 드립 요법 → 줄기세포 증식을 돕는 산소 챔버 치료 및 LDM 재생 레이저 관리 → 가벼운 서울 청담동 프라이빗 쇼핑 투어</p>
-              </div>
-            </div>
-          </div>
-          
-          <div class="bg-cream p-4 rounded-2xl border border-stone-200/80 text-center">
-            <span class="text-xs font-semibold text-stone-600 block">이 모든 특별한 경험을 원스톱으로 지원해 드립니다.</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Consultation / Inquiry Form -->
-  <section id="inquiry" class="py-24 bg-white">
-    <div class="max-w-4xl mx-auto px-6">
-      <div class="text-center space-y-4 mb-16">
-        <span class="text-gold text-xs font-bold tracking-widest uppercase block font-luxury">VVIP RESERVATION & INQUIRY</span>
-        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
-          실시간 1:1 VIP 예약 및 상담 신청
-        </h2>
-        <div class="w-12 h-1 bg-gold mx-auto"></div>
-        <p class="text-stone-500 text-sm max-w-lg mx-auto">
-          줄기세포 시술에 대한 정밀 견적서, 시술 절차, 입국 준비 사항 등을 태국 전문 코디네이터가 신속하고 친절하게 답변해 드립니다.
-        </p>
-      </div>
-
-      <!-- Live Submit Form with Database Connection (Client Side) -->
-      <form id="publicInquiryForm" class="bg-cream border border-stone-200 p-8 sm:p-12 rounded-3xl shadow-xl space-y-8" novalidate>
-        <!-- Form Feedback Header -->
-        <div id="formSuccessHeader" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 p-6 rounded-2xl space-y-2">
-          <h4 class="font-bold text-lg">상담 예약 신청이 완벽히 접수되었습니다!</h4>
-          <p class="text-sm">입력해주신 연락처 및 이메일로 24시간 이내에 전담 태국 코디네이터가 상세 견적서와 세부 일정 조율을 위한 피드백을 전달해 드립니다. 소중한 관심에 진심으로 감사드립니다.</p>
-        </div>
-
-        <div class="grid sm:grid-cols-2 gap-6" id="formMainFields">
-          <!-- Name -->
-          <div class="space-y-2">
-            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider" for="inquiryName">
-              성함 (Full Name) <span class="text-rose-500">*</span>
-            </label>
-            <input type="text" id="inquiryName" class="w-full bg-white border border-stone-300 rounded-xl px-4 py-3 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all" placeholder="예: Somchai S." required>
-            <p id="errorInquiryName" class="hidden text-xs text-rose-500 font-semibold">성함을 정확히 입력해 주세요.</p>
-          </div>
-
-          <!-- Email -->
-          <div class="space-y-2">
-            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider" for="inquiryEmail">
-              이메일 (Email Address) <span class="text-rose-500">*</span>
-            </label>
-            <input type="email" id="inquiryEmail" class="w-full bg-white border border-stone-300 rounded-xl px-4 py-3 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all" placeholder="example@gmail.com" required>
-            <p id="errorInquiryEmail" class="hidden text-xs text-rose-500 font-semibold">이메일 형식이 올바르지 않습니다.</p>
-          </div>
-
-          <!-- Mobile Contact -->
-          <div class="space-y-2">
-            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider" for="inquiryMobile">
-              연락처 (Mobile / Messenger ID) <span class="text-rose-500">*</span>
-            </label>
-            <input type="text" id="inquiryMobile" class="w-full bg-white border border-stone-300 rounded-xl px-4 py-3 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all" placeholder="+66 81-xxx-xxxx 또는 Line ID" required>
-            <p id="errorInquiryMobile" class="hidden text-xs text-rose-500 font-semibold">상담을 위해 연락처 혹은 메신저 ID를 작성해 주세요.</p>
-          </div>
-
-          <!-- Preferred Treatment -->
-          <div class="space-y-2">
-            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider" for="inquiryProgram">
-              관심 시술 선택 (Desired Program) <span class="text-rose-500">*</span>
-            </label>
-            <select id="inquiryProgram" class="w-full bg-white border border-stone-300 rounded-xl px-4 py-3 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all">
-              <option value="all">전체 프로그램 종합 설계 상담</option>
-              <option value="iv">줄기세포 전신 정맥 주사 (항노화)</option>
-              <option value="skin">줄기세포 피부 시술 & 스킨부스터</option>
-              <option value="fat">줄기세포 하이브리드 지방이식</option>
-            </select>
-          </div>
-
-          <!-- Preferred Visit Date -->
-          <div class="space-y-2 sm:col-span-2">
-            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider" for="inquiryDate">
-              희망 방문 시기 (Preferred Date of Visit)
-            </label>
-            <input type="date" id="inquiryDate" class="w-full bg-white border border-stone-300 rounded-xl px-4 py-3 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all">
-          </div>
-
-          <!-- Message -->
-          <div class="space-y-2 sm:col-span-2">
-            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider" for="inquiryMessage">
-              추가 문의 사항 및 증상 기술 (Detailed Inquiry)
-            </label>
-            <textarea id="inquiryMessage" rows="5" class="w-full bg-white border border-stone-300 rounded-xl px-4 py-4 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all" placeholder="현재 피부 및 신체 상태, 원하시는 전반적인 개선 목표를 한글 혹은 영문으로 편하게 작성해 주세요."></textarea>
-          </div>
-        </div>
-
-        <div class="flex flex-col items-center gap-4" id="formActionContainer">
-          <button type="submit" id="submitInquiryBtn" class="w-full bg-gold hover-gold text-white py-4 rounded-xl text-sm font-semibold tracking-wide transition-all shadow-lg shadow-amber-900/10 flex items-center justify-center gap-2">
-            <span>VIP 실시간 예약 및 견적 신청하기</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-            </svg>
-          </button>
-          <p class="text-[11px] text-stone-400">모즈클리닉은 개인 정보 보호 규정을 철저히 준수하며 암호화 시스템으로 소중한 정보를 완벽히 보호합니다.</p>
-        </div>
-      </form>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="bg-stone-900 text-stone-400 py-16 mt-auto border-t border-stone-800">
-    <div class="max-w-7xl mx-auto px-6 space-y-12">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-8 border-b border-stone-800">
-        <div>
-          <span class="font-luxury text-2xl font-bold tracking-widest text-white">MODS<span class="text-gold font-light"> CLINIC</span></span>
-          <p class="text-xs text-stone-500 mt-2">Premium Autologous Stem Cell Wellness Clinic</p>
-        </div>
-        <div class="flex gap-4">
-          <!-- Line icon mockup -->
-          <span class="bg-stone-800 text-stone-200 px-4 py-2 rounded-lg text-xs font-bold border border-stone-700">LINE ID: @modsclinic</span>
-          <span class="bg-stone-800 text-stone-200 px-4 py-2 rounded-lg text-xs font-bold border border-stone-700">TEL: +82-2-545-1211</span>
-        </div>
-      </div>
-      
-      <div class="grid md:grid-cols-4 gap-8 text-xs leading-relaxed">
-        <div class="space-y-3">
-          <h5 class="text-white font-bold tracking-wider">주소 및 위치</h5>
-          <p class="text-stone-500">
-            서울특별시 강남구 청담동 84-4 모즈타워<br>
-            (도산대로 67길 13 모즈빌딩)<br>
-            분당선 압구정로데오역 4번 출구 도보 5분
-          </p>
-        </div>
-        <div class="space-y-3">
-          <h5 class="text-white font-bold tracking-wider">상담 및 진료시간</h5>
-          <p class="text-stone-500">
-            평일: 오전 10:00 - 오후 19:00<br>
-            토요일: 오전 10:00 - 오후 16:00<br>
-            일요일 및 한국 공휴일 휴진<br>
-            *태국 VIP 고객님은 100% 사전 예약제 운영
-          </p>
-        </div>
-        <div class="space-y-3">
-          <h5 class="text-white font-bold tracking-wider">대표자 정보</h5>
-          <p class="text-stone-500">
-            상호명: (주)모노라마 (모즈클리닉 메디컨시어지 사업부)<br>
-            대표이사: 김창호 | 사업자등록번호: 277-86-00185<br>
-            보건산업진흥원 외국인 환자 유치 의료기관 승인 완료
-          </p>
-        </div>
-        <div class="space-y-3">
-          <h5 class="text-white font-bold tracking-wider">기관 전용 시스템</h5>
-          <p class="text-stone-500">병원 임직원 및 광고 담당자는 전용 관리 포털을 이용하실 수 있습니다.</p>
-          <a href="/admin" class="inline-flex items-center gap-1.5 text-gold hover:underline font-bold mt-1">
-            <span>기관 CRM 로그인 포털 가기</span>
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7m0 0l-7 7m7-7H3"></path>
-            </svg>
-          </a>
-        </div>
-      </div>
-      
-      <div class="flex flex-col sm:flex-row justify-between items-center text-[11px] text-stone-600 gap-4 pt-4">
-        <p>&copy; 2026 MODS Clinic. All Rights Reserved. Powered by MONORAMA Med-Tech.</p>
-        <div class="flex gap-4">
-          <a href="#" class="hover:underline">개인정보처리방침</a>
-          <a href="#" class="hover:underline">이용약관</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Form Submit Logic Script -->
+  </div>
   <script>
-    document.getElementById('publicInquiryForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      const name = document.getElementById('inquiryName').value.trim();
-      const email = document.getElementById('inquiryEmail').value.trim();
-      const mobile = document.getElementById('inquiryMobile').value.trim();
-      const program = document.getElementById('inquiryProgram').value;
-      const visitDate = document.getElementById('inquiryDate').value;
-      const message = document.getElementById('inquiryMessage').value.trim();
-      
-      let isValid = true;
-      
-      // Validation Name
-      if (!name) {
-        document.getElementById('errorInquiryName').classList.remove('hidden');
-        isValid = false;
-      } else {
-        document.getElementById('errorInquiryName').classList.add('hidden');
+    const COPY = {
+      ko: {},
+      th: {
+        topNote:'เตรียมแผนความงามที่เหมาะกับคุณด้วยการปรึกษาออนไลน์ก่อนเดินทางไปโซล',navStory:'ทริปความงามโซล',navPrograms:'โปรแกรมความงาม',navJourney:'ขั้นตอนปรึกษาและจอง',navTrust:'ความไว้วางใจ',navNotices:'ประกาศ',navConsult:'ปรึกษาออนไลน์',
+        heroEyebrow:'Beauty trip to Cheongdam, Seoul',heroTitle:'เที่ยวโซลให้เต็มที่<br>และพบกับ<em>ความงามในแบบคุณ</em>',heroLead:'ปรึกษาและนัดหมายออนไลน์ก่อนเดินทางมาเกาหลี เพลิดเพลินกับวัฒนธรรมและการท่องเที่ยวในโซล พร้อมรับการดูแลความงามที่เหมาะกับคุณอย่างสบายใจ',heroCta:'เริ่มปรึกษาก่อนเดินทาง',heroMore:'ดูโปรแกรม',trust1:'คลินิกพรีเมียมย่านชองดัม',trust2:'ออกแบบเฉพาะบุคคล',trust3:'บริการลูกค้าต่างชาติ',
+        storyTitle:'เติมความงาม<br>ให้กับความตื่นเต้นของการเดินทาง',storyCopy:'การมาเกาหลีเพื่อสัมผัส K-Beauty กลายเป็นรูปแบบการท่องเที่ยวที่เป็นสากล คุณสามารถเพิ่มความพึงพอใจให้ทริปด้วยหัตถการเบา ๆ ที่ช่วยดูแลผิว กรอบหน้า วอลลุ่ม และความกระชับ โดยไม่จำเป็นต้องผ่าตัดใหญ่<br><br>แจ้งภาพลักษณ์ที่ต้องการและกำหนดการเดินทางก่อนมาถึง การปรึกษาล่วงหน้าช่วยให้วางแผนการดูแลและเวลาพักฟื้นอย่างเหมาะสม เพื่อให้คุณสนุกกับวัฒนธรรมและอาหารของโซล พร้อมกลับไปด้วยความมั่นใจที่มากขึ้น',
+        valueTitle1:'Plan before arrival',valueCopy1:'พูดคุยปัญหา กำหนดการ และบริการที่สนใจก่อนเดินทาง',valueTitle2:'Beauty in your rhythm',valueCopy2:'เสนอแผนความงามเฉพาะบุคคลที่ไม่รบกวนการท่องเที่ยว',valueTitle3:'Enjoy Seoul fully',valueCopy3:'เพลิดเพลินกับการดูแลที่ชองดัม วัฒนธรรม ช้อปปิ้ง และอาหารของโซล',
+        programTitle:'โปรแกรมความงามยอดนิยมสำหรับผู้หญิง',programLead:'แพทย์จะแนะนำวิธีที่เหมาะสมหลังประเมินสภาพผิว ความสมดุลของใบหน้า และกำหนดการเดินทาง',p1Title:'ยกกระชับและความยืดหยุ่น',p1Copy:'การยกกระชับเฉพาะบุคคลเพื่อภาพลักษณ์ที่เป็นธรรมชาติและเรียบร้อย',p2Title:'วีไลน์และกรอบหน้า',p2Copy:'ออกแบบกรอบหน้าโดยคำนึงถึงรูปหน้า กล้ามเนื้อ และไขมันอย่างสมดุล',p3Title:'ฟิลเลอร์และโบท็อกซ์',p3Copy:'การดูแลอย่างละเอียดที่ให้ความสำคัญกับวอลลุ่มพอดีและสีหน้าเป็นธรรมชาติ',p4Title:'ดูแลคุณภาพผิว',p4Copy:'ดูแลผิวแพ้ง่าย ความชุ่มชื้น รูขุมขน เม็ดสี และผิวสัมผัสให้ดูใสสุขภาพดี',p5Title:'ออกแบบวอลลุ่มใบหน้า',p5Copy:'เพิ่มมิติและความสดใสอย่างนุ่มนวล โดยเคารพสัดส่วนใบหน้าแต่ละคน',p6Title:'รูปร่างและความกระชับ',p6Copy:'โปรแกรมเลือกได้สำหรับแขน หน้าท้อง ต้นขา และบริเวณที่กังวล',
+        journeyTitle:'เตรียมตัวอย่างสบายใจ<br>ตั้งแต่ก่อนเดินทางมาเกาหลี',journeyCopy:'เรารับฟังเป้าหมายและกำหนดการก่อน เพื่อช่วยลดความกังวลในการรับบริการต่างประเทศ การปรึกษาออนไลน์ไม่ทดแทนการตรวจโดยแพทย์ และบริการสุดท้ายจะตัดสินหลังประเมินที่คลินิก',journeyCta:'เชื่อมต่อการปรึกษาออนไลน์',step1Title:'ปรึกษาออนไลน์ล่วงหน้า',step1Copy:'แจ้งจุดกังวล การเปลี่ยนแปลงที่ต้องการ และระยะเวลาพำนักในเกาหลี',step2Title:'เสนอแผนเฉพาะบุคคล',step2Copy:'แนะนำวันนัดโดยคำนึงถึงเส้นทางท่องเที่ยวและเวลาพักฟื้น',step3Title:'เยี่ยม MODS Clinic ชองดัม',step3Copy:'แพทย์ตรวจประเมินและอธิบายวิธีที่เหมาะสมรวมถึงข้อควรระวัง',step4Title:'เที่ยวโซลและดูแลหลังทำ',step4Copy:'ปฏิบัติตามคำแนะนำและเพลิดเพลินกับช่วงเวลาพิเศษในโซล',
+        proofTitle:'ความไว้วางใจที่สะท้อนผ่าน<br>ลูกค้าที่กลับมาอีกครั้ง',proofCopy:'MODS Clinic ต้อนรับลูกค้าต่างชาติจากญี่ปุ่น จีน และประเทศอื่น ๆ อย่างต่อเนื่อง และได้รับความไว้วางใจจากลูกค้าที่กลับมาใช้บริการซ้ำ จากประสบการณ์นี้ เรากำลังพัฒนาบริการสำหรับผู้หญิงไทยโดยคำนึงถึงลักษณะใบหน้า ปัญหาผิว และรูปแบบการเดินทางของแต่ละคน',proof1Title:'ประสบการณ์ดูแลลูกค้าเอเชีย',proof1Copy:'ประสบการณ์การให้คำปรึกษากับลูกค้าจากญี่ปุ่น จีน และหลายประเทศ',proof2Title:'ความไว้วางใจจากการกลับมาใช้บริการ',proof2Copy:'การดูแลที่สร้างความสัมพันธ์ต่อเนื่องมากกว่าการมาเพียงครั้งเดียว',proof3Title:'บริการเฉพาะสำหรับลูกค้าไทย',proof3Copy:'คำแนะนำที่คำนึงถึงใบหน้า ผิว และกำหนดการเดินทาง',
+        ctaTitle:'ทริปความงามในโซลของคุณ เริ่มต้นจากการปรึกษา',ctaCopy:'บอกบริการที่สนใจและกำหนดการเดินทางมาเกาหลี<br>MODS Clinic จะช่วยเตรียมก้าวแรกอย่างสบายใจ',ctaButton:'ปรึกษาตอนนี้',footerInfo:'ชั้น 2 อาคาร Art Building, 33 Apgujeong-ro 80-gil, Gangnam-gu, Seoul<br>MODS Clinic · โทร. +82-2-545-1618<br>© MODS CLINIC. All Rights Reserved.',footerConsult:'ปรึกษาออนไลน์',footerLocation:'แผนที่',footerAdmin:'ผู้ดูแลระบบ',campaignHideToday:'วันนี้ไม่แสดงอีก'
       }
-      
-      // Validation Email
-      const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-      if (!email || !emailRegex.test(email)) {
-        document.getElementById('errorInquiryEmail').classList.remove('hidden');
-        isValid = false;
-      } else {
-        document.getElementById('errorInquiryEmail').classList.add('hidden');
-      }
-      
-      // Validation Contact
-      if (!mobile) {
-        document.getElementById('errorInquiryMobile').classList.remove('hidden');
-        isValid = false;
-      } else {
-        document.getElementById('errorInquiryMobile').classList.add('hidden');
-      }
-      
-      if (!isValid) return;
-      
-      // Change button state
-      const btn = document.getElementById('submitInquiryBtn');
-      const originalHtml = btn.innerHTML;
-      btn.disabled = true;
-      btn.innerHTML = `
-        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span>처리 중... (Sending...)</span>
-      `;
-      
-      try {
-        const res = await fetch('/api/public/consult/inquiry', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, mobile, program, visitDate, message })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) {
-          throw new Error(data.error || '상담 신청 중 서버 오류가 발생했습니다.');
-        }
-        
-        // Hide form fields and show success message
-        document.getElementById('formMainFields').classList.add('hidden');
-        document.getElementById('formActionContainer').classList.add('hidden');
-        document.getElementById('formSuccessHeader').classList.remove('hidden');
-        
-        // Scroll smoothly to success header
-        document.getElementById('formSuccessHeader').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-      } catch (err) {
-        console.error('Submission failed', err);
-        alert(err.message || '서버와의 원활한 통신에 실패했습니다. 다시 한번 시도해 주세요.');
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-      }
-    });
+    };
+    const korean = {};
+    document.querySelectorAll('[data-i18n]').forEach(el => korean[el.dataset.i18n] = el.textContent);
+    document.querySelectorAll('[data-i18n-html]').forEach(el => korean[el.dataset.i18nHtml] = el.innerHTML);
+    COPY.ko = korean;
+    const picker = document.getElementById('langPicker');
+    function setLanguage(lang, persist=true){
+      if (!COPY[lang]) lang='ko';
+      document.documentElement.lang=lang;
+      document.documentElement.dir='ltr';
+      document.querySelectorAll('[data-i18n]').forEach(el => { const v=COPY[lang][el.dataset.i18n]; if(v!=null) el.textContent=v; });
+      document.querySelectorAll('[data-i18n-html]').forEach(el => { const v=COPY[lang][el.dataset.i18nHtml]; if(v!=null) el.innerHTML=v; });
+      document.getElementById('langBtn').textContent=(lang==='th'?'ไทย':'한국어')+' ▾';
+      document.querySelectorAll('[data-lang]').forEach(btn=>btn.classList.toggle('active',btn.dataset.lang===lang));
+      document.title=lang==='th'?'MODS CLINIC | ทริปความงามในโซล':'MODS CLINIC | 서울에서 만나는 나다운 아름다움';
+      if(persist) localStorage.setItem('mods_language',lang);
+      picker.classList.remove('open');
+    }
+    document.getElementById('langBtn').addEventListener('click',()=>{picker.classList.toggle('open');document.getElementById('langBtn').setAttribute('aria-expanded',picker.classList.contains('open'))});
+    document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>setLanguage(btn.dataset.lang)));
+    document.addEventListener('click',e=>{if(!picker.contains(e.target))picker.classList.remove('open')});
+    const saved=localStorage.getItem('mods_language');
+    const browserLanguage=String(navigator.language || navigator.languages?.[0] || 'ko').toLowerCase();
+    const browserThai=browserLanguage.startsWith('th');
+    setLanguage(saved || (browserThai?'th':'ko'),false);
+    const campaignPopup=document.getElementById('campaignLaunchPopup');
+    const campaignImage=document.getElementById('campaignLaunchImage');
+    const campaignLink=document.getElementById('campaignLaunchLink');
+    const campaignHideToday=document.getElementById('campaignHideToday');
+    const campaignDismissKey='mods_campaign_260802_0002_hidden_date';
+    const localDateKey=()=>{const now=new Date();return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`};
+    const closeCampaignPopup=()=>{campaignPopup.style.display='none';campaignImage.removeAttribute('src');document.body.style.overflow=''};
+    document.getElementById('campaignLaunchClose').addEventListener('click',closeCampaignPopup);
+    campaignHideToday.addEventListener('click',()=>{localStorage.setItem(campaignDismissKey,localDateKey());closeCampaignPopup()});
+    campaignPopup.addEventListener('click',event=>{if(event.target===campaignPopup)closeCampaignPopup()});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&campaignPopup.style.display==='flex')closeCampaignPopup()});
+    setTimeout(async()=>{
+      if(localStorage.getItem(campaignDismissKey)===localDateKey())return;
+      const browserLanguages=(navigator.languages?.length?navigator.languages:[navigator.language||'en']).map(value=>String(value).toLowerCase().split('-')[0]).join(',');
+      try{
+        const response=await fetch(`/api/campaigns/image-page/260802_0002?lang=${encodeURIComponent(browserLanguages)}`);
+        const data=await response.json();
+        if(!response.ok||!data.ok||!data.data?.image_url)return;
+        campaignImage.src=data.data.image_url;
+        campaignImage.alt=data.data.campaign_name||'Campaign image';
+        campaignLink.href=data.data.form_url||'#';
+        campaignPopup.style.display='flex';
+        document.body.style.overflow='hidden';
+      }catch{}
+    },450);
   </script>
 </body>
 </html>

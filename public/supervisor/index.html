@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>관리자 로그인 - 모노라마 병원 CRM 시스템</title>
+  <title>전문 외국환자관리 CRM</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
@@ -99,9 +99,9 @@
       if (!res.ok) return MxAlert.error(data.error || '로그인 실패');
 
       let msg = `환영합니다, ${username}님!<br><br>많은 이용을 바랍니다.`;
-      if (data.prevIp && data.prevAt) {
-        const dt = new Date(data.prevAt).toLocaleString('ko-KR');
-        msg += `<br><br><small style="color:#6b7280">마지막 접속: ${data.prevIp} (${dt})</small>`;
+      if (data.prevIp && data.prevLogoutAt) {
+        const dt = new Date(data.prevLogoutAt).toLocaleString('ko-KR');
+        msg += `<br><br><small style="color:#6b7280">마지막 접속 IP: ${data.prevIp}<br>마지막 로그아웃: ${dt}</small>`;
       }
       await MxAlert.success(msg, { title: '관리자 로그인 성공', confirmText: '시작하기', confirmColor: 'black' });
       window.location.href = '/supervisor/dashboard';

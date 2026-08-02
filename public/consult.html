@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>온라인 1:1 상담</title>
+  <title>Online Consultation | MODS CLINIC</title>
   <link rel="stylesheet" href="/css/common.css">
-  <style>
+<style>
+  #verifyBtn,#sendBtn,#createBtn{display:flex;align-items:center;justify-content:center;text-align:center}
     body { background: var(--gray-50, #f8fafc); }
     .cs-wrap { max-width: 720px; margin: 36px auto; padding: 0 16px; }
     .cs-card { background:#fff; border:1px solid var(--gray-200,#e5e7eb); border-radius:12px; padding:24px; margin-bottom:18px; }
@@ -22,38 +23,39 @@
     .hidden { display:none; }
     .cs-row { display:flex; gap:8px; }
     .answer-box { border-left:3px solid var(--primary,#2563eb); background:#f8fafc; border-radius:6px; padding:12px 14px; margin-top:10px; }
+    .consult-drop{border:2px dashed #cbd5e1;border-radius:9px;padding:18px;text-align:center;color:#64748b;font-size:13px;cursor:pointer;transition:.15s;margin-bottom:14px}.consult-drop.over{border-color:#2563eb;background:#eff6ff;color:#2563eb}.consult-files{font-size:12px;color:#475569;margin-top:8px;text-align:left}
   </style>
 </head>
 <body>
   <div class="cs-wrap">
-    <div class="cs-head"><h1 id="hosName">온라인 1:1 상담</h1><p>비공개 상담 — 작성자 본인만 확인할 수 있습니다.</p></div>
+    <div class="cs-head"><h1 id="hosName" data-i18n="heading">온라인 1:1 상담</h1><p data-i18n="privateNote">비공개 상담 — 작성자 본인만 확인할 수 있습니다.</p></div>
 
     <!-- 1) 본인확인 -->
     <div class="cs-card" id="authCard">
-      <div class="form-group"><label class="form-label">이메일</label><input type="email" class="form-control" id="email" placeholder="이메일"></div>
-      <div class="form-group"><label class="form-label">인증코드 <span style="color:#2563eb">(비밀번호)</span></label><input type="text" class="form-control" id="code" placeholder="메일로 받은 6자리 코드" autocomplete="off"></div>
-      <p style="font-size:12.5px;color:#6b7280;line-height:1.55;margin:2px 0 6px">
+      <div class="form-group"><label class="form-label" data-i18n="emailLabel">이메일</label><div style="display:flex;gap:8px"><input type="email" class="form-control" id="email" placeholder="이메일" data-i18n-placeholder="emailPlaceholder" style="flex:1"><button type="button" class="btn btn-ghost" id="sendBtn" data-i18n="sendCode" disabled>인증코드 발급</button></div><div class="form-hint" id="emailStatus">이메일 형식에 맞게 입력해 주세요.</div></div>
+      <div class="form-group"><label class="form-label"><span data-i18n="codeLabel">인증코드</span> <span style="color:#2563eb" data-i18n="passwordNote">(비밀번호)</span></label><div style="display:flex;gap:8px"><input type="text" class="form-control" id="code" placeholder="메일로 받은 6자리 코드" data-i18n-placeholder="codePlaceholder" autocomplete="off" maxlength="6" inputmode="numeric" style="flex:1"><button type="button" class="btn btn-ghost" id="codeVerifyBtn" data-i18n="verifyCode" disabled>인증하기</button></div><div class="form-hint" id="verifyStatus"></div></div>
+      <p data-i18n-html="codeHelp" style="font-size:12.5px;color:#6b7280;line-height:1.55;margin:2px 0 6px">
         이전에 받은 인증코드가 있으면 이메일과 함께 입력해 <strong>바로 진행</strong>하세요.
         코드를 모르시면 <strong>인증코드 재발급</strong>을 받으시면 됩니다.
         이 인증코드는 다음 접속·채팅 참여 시 <strong style="color:#2563eb">비밀번호로 사용</strong>되니 보관해 주세요.
       </p>
       <div class="cs-row" style="margin-top:8px">
-        <button class="btn btn-primary" id="verifyBtn" style="flex:1">상담 진행</button>
-        <button class="btn btn-ghost" id="sendBtn" style="flex:1">인증코드 재발급</button>
+        <button class="btn btn-primary" id="verifyBtn" data-i18n="continueConsult" style="width:100%" disabled>상담 진행</button>
       </div>
     </div>
 
     <!-- 2) 글 작성 -->
     <div class="cs-card hidden" id="writeCard">
-      <h3 style="margin:0 0 12px">상담 요청 작성</h3>
-      <div class="form-group"><label class="form-label">제목</label><input type="text" class="form-control" id="pTitle"></div>
-      <div class="form-group"><label class="form-label">내용</label><textarea class="form-control" id="pBody" rows="5"></textarea></div>
-      <button class="btn btn-primary" id="createBtn" style="width:100%">상담 등록</button>
+      <div class="form-group"><label class="form-label" data-i18n="titleLabel">제목</label><input type="text" class="form-control" id="pTitle"></div>
+      <div class="form-group"><label class="form-label" data-i18n="contentLabel">내용</label><textarea class="form-control" id="pBody" rows="5"></textarea></div>
+      <div class="consult-drop" id="consultDrop"><span data-i18n="dropFiles">📎 파일을 끌어다 놓거나 클릭하여 첨부하세요.</span><div data-i18n="fileLimits">이미지·PDF·문서·압축파일, 파일당 최대 25MB / 최대 5개</div><div class="consult-files" id="consultFiles"></div></div>
+      <input type="file" id="consultFileInput" multiple hidden accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,.hwpx,.zip">
+      <button class="btn btn-primary" id="createBtn" data-i18n="submitConsult" style="width:100%">상담 등록</button>
     </div>
 
     <!-- 3) 내 상담 목록 -->
     <div class="cs-card hidden" id="listCard">
-      <h3 style="margin:0 0 12px">내 상담 내역</h3>
+      <h3 style="margin:0 0 12px" data-i18n="myConsults">내 상담 내역</h3>
       <div id="postList"></div>
     </div>
   </div>
@@ -61,15 +63,26 @@
   <!-- 상세 모달 -->
   <div class="overlay" id="detailOverlay">
     <div class="overlay-dialog" style="max-width:560px;width:97%">
-      <div class="overlay-header"><span class="overlay-title">상담 상세</span><button class="overlay-close" id="detailClose">✕</button></div>
+      <div class="overlay-header"><span class="overlay-title" data-i18n="consultDetail">상담 상세</span><button class="overlay-close" id="detailClose">✕</button></div>
       <div class="overlay-body" id="detailBody" style="padding:20px 22px"></div>
     </div>
   </div>
 
   <script src="/js/alert.js"></script>
   <script>
+    const LANG=(()=>{const code=String(navigator.languages?.[0]||navigator.language||'en').toLowerCase().split('-')[0];return code==='ko'||code==='th'?code:'en' })();
+    const TEXT={
+      ko:{pageTitle:'온라인 상담 | MODS CLINIC',heading:'온라인 1:1 상담',headingWithHospital:'{hospital} 온라인 1:1 상담',privateNote:'비공개 상담 — 작성자 본인만 확인할 수 있습니다.',emailLabel:'이메일',emailPlaceholder:'이메일',sendCode:'인증코드 발급',resendCode:'코드 재발급',codeLabel:'인증코드',passwordNote:'(비밀번호)',codePlaceholder:'메일로 받은 6자리 코드',verifyCode:'인증하기',codeHelp:'이전에 받은 인증코드가 있으면 이메일과 함께 입력해 <strong>바로 진행</strong>하세요. 코드를 모르시면 <strong>인증코드 재발급</strong>을 받으시면 됩니다. 이 인증코드는 다음 접속·채팅 참여 시 <strong style="color:#2563eb">비밀번호로 사용</strong>되니 보관해 주세요.',continueConsult:'상담 진행',titleLabel:'제목',contentLabel:'내용',dropFiles:'📎 파일을 끌어다 놓거나 클릭하여 첨부하세요.',fileLimits:'이미지·PDF·문서·압축파일, 파일당 최대 25MB / 최대 5개',submitConsult:'상담 등록',myConsults:'내 상담 내역',consultDetail:'상담 상세',invalidAccess:'잘못된 접근입니다.',requestFailed:'요청에 실패했습니다.',issueFirst:'먼저 인증코드를 발급받아 주세요.',enterAndVerify:'인증코드를 입력하고 인증하기를 눌러 주세요.',emailInvalid:'이메일 형식에 맞게 입력해 주세요.',emailValid:'인증코드를 발급할 수 있습니다.',codeSent:'인증코드를 메일로 보냈습니다. 이 코드가 비밀번호입니다.',issueCurrentEmail:'현재 이메일로 인증코드를 먼저 발급받아 주세요.',enterSixDigits:'6자리 인증코드를 입력하세요.',verifiedProceed:'인증이 완료되었습니다. 상담 진행 버튼을 눌러 주세요.',verified:'인증이 완료되었습니다.',enterTitleBody:'제목과 내용을 입력하세요.',fileTooLarge:'첨부파일은 파일당 25MB까지 업로드할 수 있습니다.',uploadFailed:'첨부파일을 업로드하지 못했습니다.',submitted:'상담이 등록되었습니다.',noConsults:'등록한 상담이 없습니다.',statusNew:'접수',statusAssigned:'배정',statusAnswered:'답변완료',statusClosed:'종결',answers:'답변 {count}건',attachments:'첨부파일',answer:'답변',doctor:'의사',staff:'담당자',startChat:'💬 채팅 시작',edit:'수정',delete:'삭제',newTitle:'새 제목',newContent:'새 내용',updated:'수정되었습니다.',deleteConfirm:'이 상담을 삭제하시겠습니까?',deleted:'삭제되었습니다.'},
+      th:{pageTitle:'ปรึกษาออนไลน์ | MODS CLINIC',heading:'ปรึกษาออนไลน์แบบ 1:1',headingWithHospital:'{hospital} ปรึกษาออนไลน์แบบ 1:1',privateNote:'การปรึกษาเป็นความลับ — เฉพาะผู้เขียนเท่านั้นที่ดูได้',emailLabel:'อีเมล',emailPlaceholder:'อีเมล',sendCode:'ขอรหัสยืนยัน',resendCode:'ขอรหัสใหม่',codeLabel:'รหัสยืนยัน',passwordNote:'(รหัสผ่าน)',codePlaceholder:'รหัส 6 หลักที่ได้รับทางอีเมล',verifyCode:'ยืนยัน',codeHelp:'หากมีรหัสยืนยันเดิม ให้กรอกพร้อมอีเมลแล้ว <strong>ดำเนินการต่อได้ทันที</strong> หากไม่ทราบรหัส โปรด <strong>ขอรหัสใหม่</strong> โปรดเก็บรหัสนี้ไว้ เพราะจะใช้เป็น <strong style="color:#2563eb">รหัสผ่าน</strong> สำหรับการเข้าใช้ครั้งถัดไปและการแชต',continueConsult:'ดำเนินการปรึกษา',titleLabel:'หัวข้อ',contentLabel:'รายละเอียด',dropFiles:'📎 ลากไฟล์มาวางหรือคลิกเพื่อแนบไฟล์',fileLimits:'รูปภาพ · PDF · เอกสาร · ไฟล์บีบอัด สูงสุด 25MB ต่อไฟล์ / ไม่เกิน 5 ไฟล์',submitConsult:'ส่งคำปรึกษา',myConsults:'ประวัติการปรึกษาของฉัน',consultDetail:'รายละเอียดการปรึกษา',invalidAccess:'การเข้าถึงไม่ถูกต้อง',requestFailed:'ไม่สามารถดำเนินการได้',issueFirst:'โปรดขอรหัสยืนยันก่อน',enterAndVerify:'กรอกรหัสยืนยันแล้วกดยืนยัน',emailInvalid:'โปรดกรอกอีเมลให้ถูกต้อง',emailValid:'สามารถขอรหัสยืนยันได้',codeSent:'ส่งรหัสยืนยันทางอีเมลแล้ว รหัสนี้คือรหัสผ่านของคุณ',issueCurrentEmail:'โปรดขอรหัสยืนยันสำหรับอีเมลนี้ก่อน',enterSixDigits:'โปรดกรอกรหัสยืนยัน 6 หลัก',verifiedProceed:'ยืนยันสำเร็จ กรุณากดปุ่มดำเนินการปรึกษา',verified:'ยืนยันสำเร็จ',enterTitleBody:'โปรดกรอกหัวข้อและรายละเอียด',fileTooLarge:'ไฟล์แนบแต่ละไฟล์ต้องมีขนาดไม่เกิน 25MB',uploadFailed:'อัปโหลดไฟล์แนบไม่สำเร็จ',submitted:'ส่งคำปรึกษาเรียบร้อยแล้ว',noConsults:'ยังไม่มีรายการปรึกษา',statusNew:'รับเรื่องแล้ว',statusAssigned:'มอบหมายแล้ว',statusAnswered:'ตอบแล้ว',statusClosed:'ปิดแล้ว',answers:'คำตอบ {count} รายการ',attachments:'ไฟล์แนบ',answer:'คำตอบ',doctor:'แพทย์',staff:'เจ้าหน้าที่',startChat:'💬 เริ่มแชต',edit:'แก้ไข',delete:'ลบ',newTitle:'หัวข้อใหม่',newContent:'รายละเอียดใหม่',updated:'แก้ไขเรียบร้อยแล้ว',deleteConfirm:'ต้องการลบรายการปรึกษานี้หรือไม่?',deleted:'ลบเรียบร้อยแล้ว'},
+      en:{pageTitle:'Online Consultation | MODS CLINIC',heading:'Private 1:1 Online Consultation',headingWithHospital:'{hospital} Private 1:1 Online Consultation',privateNote:'Private consultation — only the author can view it.',emailLabel:'Email',emailPlaceholder:'Email',sendCode:'Send verification code',resendCode:'Resend code',codeLabel:'Verification code',passwordNote:'(Password)',codePlaceholder:'6-digit code received by email',verifyCode:'Verify',codeHelp:'If you already have a verification code, enter it with your email to <strong>continue immediately</strong>. If you do not know the code, <strong>request a new one</strong>. Keep this code as it will be used as your <strong style="color:#2563eb">password</strong> for future visits and chats.',continueConsult:'Continue consultation',titleLabel:'Subject',contentLabel:'Message',dropFiles:'📎 Drag files here or click to attach.',fileLimits:'Images, PDF, documents, or archives; up to 25MB each / 5 files maximum',submitConsult:'Submit consultation',myConsults:'My consultations',consultDetail:'Consultation details',invalidAccess:'Invalid access.',requestFailed:'Request failed.',issueFirst:'Please request a verification code first.',enterAndVerify:'Enter the verification code and click Verify.',emailInvalid:'Please enter a valid email address.',emailValid:'You can request a verification code.',codeSent:'The verification code was sent by email. This code is your password.',issueCurrentEmail:'Please request a verification code for this email first.',enterSixDigits:'Please enter the 6-digit verification code.',verifiedProceed:'Verification complete. Click Continue consultation.',verified:'Verification complete.',enterTitleBody:'Please enter both a subject and message.',fileTooLarge:'Each attachment must be no larger than 25MB.',uploadFailed:'Could not upload the attachment.',submitted:'Your consultation was submitted.',noConsults:'You have no consultations yet.',statusNew:'Received',statusAssigned:'Assigned',statusAnswered:'Answered',statusClosed:'Closed',answers:'{count} answers',attachments:'Attachments',answer:'Answer',doctor:'Doctor',staff:'Coordinator',startChat:'💬 Start chat',edit:'Edit',delete:'Delete',newTitle:'New subject',newContent:'New message',updated:'Updated successfully.',deleteConfirm:'Delete this consultation?',deleted:'Deleted successfully.'}
+    };
+    const t=(key,vars={})=>Object.entries(vars).reduce((value,[name,replacement])=>value.replaceAll(`{${name}}`,String(replacement)),TEXT[LANG][key]||TEXT.en[key]||key);
+    document.documentElement.lang=LANG;document.title=t('pageTitle');
+    document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
+    document.querySelectorAll('[data-i18n-html]').forEach(el=>el.innerHTML=t(el.dataset.i18nHtml));
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>el.placeholder=t(el.dataset.i18nPlaceholder));
     const H = new URLSearchParams(location.search).get('h');
-    let boardToken = null, myEmail = null;
+    let boardToken = null, myEmail = null, codeIssuedFor = null, verified = false, consultFiles = [];
     const $ = id => document.getElementById(id);
     function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function csToast(message){
@@ -86,42 +99,84 @@
     async function api(method, path, body){
       const r = await fetch(`/api/public/consult${path}${path.includes('?')?'&':'?'}h=${H}`, {
         method, headers: body?{'Content-Type':'application/json'}:{}, body: body?JSON.stringify(body):undefined });
-      const d = await r.json().catch(()=>({})); if(!r.ok||!d.ok){ const e=new Error(d.error||'요청 실패'); e.data=d; throw e; } return d;
+      const d = await r.json().catch(()=>({})); if(!r.ok||!d.ok){ const e=new Error(d.error||t('requestFailed')); e.data=d; throw e; } return d;
     }
     function openOv(id){ const e=$(id); e.style.display='flex'; setTimeout(()=>e.classList.add('visible'),10); }
     function closeOv(id){ const e=$(id); e.classList.remove('visible'); setTimeout(()=>e.style.display='none',200); }
     $('detailClose').onclick=()=>closeOv('detailOverlay');
+    function resetVerification(){
+      verified=false;boardToken=null;myEmail=null;$('verifyBtn').disabled=true;
+      $('verifyStatus').textContent=codeIssuedFor?t('enterAndVerify'):t('issueFirst');
+      $('verifyStatus').style.color='#6b7280';
+      $('codeVerifyBtn').disabled=!(codeIssuedFor&&$('email').value.trim()===codeIssuedFor&&$('code').value.trim().length===6);
+    }
+    function validEmail(value){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)}
+    function updateEmailState(){
+      const email=$('email').value.trim(),valid=validEmail(email);
+      $('sendBtn').disabled=!valid;
+      $('emailStatus').textContent=valid?t('emailValid'):t('emailInvalid');
+      $('emailStatus').style.color=valid?'#2563eb':'#6b7280';
+      if(email!==codeIssuedFor)codeIssuedFor=null;
+      resetVerification();
+    }
+    $('email').addEventListener('input',updateEmailState);
+    $('code').addEventListener('input',()=>resetVerification());
 
-    (async ()=>{ if(!H){ document.body.innerHTML='<p style="text-align:center;margin-top:40px">잘못된 접근입니다.</p>'; return; }
-      try{ const m=await api('GET','/meta'); $('hosName').textContent=m.hospital_name+' 온라인 1:1 상담'; }catch{} })();
+    (async ()=>{ if(!H){ document.body.innerHTML=`<p style="text-align:center;margin-top:40px">${t('invalidAccess')}</p>`; return; }
+      try{ const m=await api('GET','/meta'); $('hosName').textContent=t('headingWithHospital',{hospital:m.hospital_name}); }catch{} })();
 
     // 인증코드 재발급 — 새 코드를 메일로 발송(이전 코드는 무효)
     $('sendBtn').onclick = async ()=>{
-      const email=$('email').value.trim(); if(!email) return MxAlert.error('이메일을 입력하세요.');
-      try{ await api('POST','/send-code',{email}); $('sendBtn').textContent='코드 재발급';
-        csToast('인증코드를 메일로 보냈습니다. 이 코드가 비밀번호입니다.'); $('code').focus(); }catch(e){ MxAlert.error(e.message); }
+      const email=$('email').value.trim();if(!validEmail(email))return;
+      $('sendBtn').disabled=true;
+      try{ await api('POST','/send-code',{email}); codeIssuedFor=email;$('code').value='';resetVerification();$('sendBtn').textContent=t('resendCode');
+        csToast(t('codeSent')); $('code').focus(); }catch(e){ MxAlert.error(e.message); }
+      finally{$('sendBtn').disabled=!validEmail($('email').value.trim())}
     };
-    // 상담 진행 — 이메일 + 인증코드(비밀번호) 로그인
-    $('verifyBtn').onclick = async ()=>{
+    $('codeVerifyBtn').onclick = async ()=>{
       const email=$('email').value.trim(), code=$('code').value.trim();
-      if(!email||!code) return MxAlert.error('이메일과 인증코드를 입력하세요.');
+      if(email!==codeIssuedFor) return MxAlert.error(t('issueCurrentEmail'));
+      if(code.length!==6) return MxAlert.error(t('enterSixDigits'));
       try{ const d=await api('POST','/verify-code',{email,code}); boardToken=d.boardToken; myEmail=email;
-        $('authCard').classList.add('hidden'); $('writeCard').classList.remove('hidden'); $('listCard').classList.remove('hidden');
-        loadMyPosts(); }catch(e){ MxAlert.error(e.message); }
+        verified=true;$('verifyBtn').disabled=false;$('codeVerifyBtn').disabled=true;
+        $('verifyStatus').textContent=t('verifiedProceed');$('verifyStatus').style.color='#15803d';
+        csToast(t('verified'));
+      }catch(e){resetVerification();MxAlert.error(e.message)}
     };
+    $('verifyBtn').onclick = ()=>{
+      if(!verified||!boardToken)return;
+      $('authCard').classList.add('hidden');$('writeCard').classList.remove('hidden');$('listCard').classList.remove('hidden');
+      loadMyPosts();
+    };
+    resetVerification();
+    updateEmailState();
+    function setConsultFiles(files){
+      consultFiles=Array.from(files).slice(0,5);
+      $('consultFiles').innerHTML=consultFiles.map(f=>`<div>• ${esc(f.name)} (${Math.ceil(f.size/1024)}KB)</div>`).join('');
+    }
+    $('consultDrop').onclick=()=>$('consultFileInput').click();
+    $('consultFileInput').onchange=e=>setConsultFiles(e.target.files);
+    ['dragenter','dragover'].forEach(type=>$('consultDrop').addEventListener(type,e=>{e.preventDefault();$('consultDrop').classList.add('over')}));
+    ['dragleave','drop'].forEach(type=>$('consultDrop').addEventListener(type,e=>{e.preventDefault();$('consultDrop').classList.remove('over')}));
+    $('consultDrop').addEventListener('drop',e=>setConsultFiles(e.dataTransfer.files));
     $('createBtn').onclick = async ()=>{
       const title=$('pTitle').value.trim(), body=$('pBody').value.trim();
-      if(!title||!body) return MxAlert.error('제목과 내용을 입력하세요.');
-      try{ await api('POST','/posts',{boardToken,title,body}); csToast('상담이 등록되었습니다.');
-        $('pTitle').value='';$('pBody').value=''; loadMyPosts(); }catch(e){ MxAlert.error(e.message); }
+      if(!title||!body) return MxAlert.error(t('enterTitleBody'));
+      if(consultFiles.some(file=>file.size>25*1024*1024))return MxAlert.error(t('fileTooLarge'));
+      try{const created=await api('POST','/posts',{boardToken,title,body});
+        if(consultFiles.length){const form=new FormData();consultFiles.forEach(file=>form.append('files',file));
+          const response=await fetch(`/api/public/consult/posts/${created.id}/attachments?h=${encodeURIComponent(H)}&boardToken=${encodeURIComponent(boardToken)}`,{method:'POST',body:form});
+          const result=await response.json().catch(()=>({}));if(!response.ok||!result.ok)throw Error(result.error||t('uploadFailed'))}
+        csToast(t('submitted'));$('pTitle').value='';$('pBody').value='';consultFiles=[];$('consultFileInput').value='';$('consultFiles').innerHTML='';loadMyPosts();
+      }catch(e){MxAlert.error(e.message)}
     };
     async function loadMyPosts(){
       try{ const d=await api('POST','/my-posts',{boardToken});
         $('postList').innerHTML = d.data.length ? d.data.map(p=>`
           <div class="cs-post" data-id="${p.id}">
-            <div class="t">${esc(p.title)} <span class="cs-badge ${p.status}">${({new:'접수',assigned:'배정',answered:'답변완료',closed:'종결'})[p.status]||p.status}</span></div>
-            <div class="meta">${p.created_at} · 답변 ${p.answer_count}건</div>
-          </div>`).join('') : '<p style="color:#9ca3af;font-size:13px">등록한 상담이 없습니다.</p>';
+            <div class="t">${esc(p.title)} <span class="cs-badge ${p.status}">${({new:t('statusNew'),assigned:t('statusAssigned'),answered:t('statusAnswered'),closed:t('statusClosed')})[p.status]||p.status}</span></div>
+            <div class="meta">${p.created_at} · ${t('answers',{count:p.answer_count})}</div>
+          </div>`).join('') : `<p style="color:#9ca3af;font-size:13px">${t('noConsults')}</p>`;
         $('postList').querySelectorAll('.cs-post').forEach(el=>el.onclick=()=>openDetail(+el.dataset.id));
       }catch(e){ MxAlert.error(e.message); }
     }
@@ -136,21 +191,22 @@
         let html=`<div style="font-weight:700;font-size:16px">${esc(p.title)}</div>
           <div style="font-size:12px;color:#6b7280;margin:4px 0 12px">${p.created_at}</div>
           <div style="white-space:pre-wrap;line-height:1.5">${esc(p.body)}</div>`;
-        if(d.answers.length){ html+='<div style="font-weight:700;margin:16px 0 6px">답변</div>';
-          d.answers.forEach(a=>{ html+=`<div class="answer-box"><div style="font-size:12px;color:#6b7280">${a.author_type==='doctor'?'의사':'담당자'} ${esc(a.author_name||'')} · ${a.created_at}</div>
+        if(d.attachments?.length){html+=`<div style="font-weight:700;margin:16px 0 6px">${t('attachments')}</div>`+d.attachments.map(a=>`<div><a href="/api/public/consult/posts/${id}/attachments/${a.id}?h=${encodeURIComponent(H)}&token=${encodeURIComponent(viewToken)}">📎 ${esc(a.original_name)}</a></div>`).join('')}
+        if(d.answers.length){ html+=`<div style="font-weight:700;margin:16px 0 6px">${t('answer')}</div>`;
+          d.answers.forEach(a=>{ html+=`<div class="answer-box"><div style="font-size:12px;color:#6b7280">${a.author_type==='doctor'?t('doctor'):t('staff')} ${esc(a.author_name||'')} · ${a.created_at}</div>
             <div style="white-space:pre-wrap;margin-top:4px">${esc(a.body)}</div>
-            ${a.chat_link_token?`<a class="btn btn-primary btn-sm" style="margin-top:8px;display:inline-block" href="/consult-chat?h=${H}&p=${id}&t=${a.chat_link_token}">💬 채팅 시작</a>`:''}</div>`; });
+            ${a.chat_link_token?`<a class="btn btn-primary btn-sm" style="margin-top:8px;display:inline-block" href="/consult-chat?h=${H}&p=${id}&t=${a.chat_link_token}">${t('startChat')}</a>`:''}</div>`; });
         }
         html+=`<div class="cs-row" style="margin-top:16px">
-          <button class="btn btn-ghost btn-sm" id="editBtn">수정</button>
-          <button class="btn btn-danger btn-sm" id="delBtn">삭제</button></div>`;
+          <button class="btn btn-ghost btn-sm" id="editBtn">${t('edit')}</button>
+          <button class="btn btn-danger btn-sm" id="delBtn">${t('delete')}</button></div>`;
         $('detailBody').innerHTML=html; openOv('detailOverlay');
         $('editBtn').onclick=async ()=>{
-          const nt=await MxAlert.prompt('새 제목', {defaultValue:p.title}); if(nt==null) return;
-          const nb=await MxAlert.prompt('새 내용', {defaultValue:p.body}); if(nb==null) return;
-          try{ await api('PUT',`/posts/${id}`,{boardToken,title:nt,body:nb}); csToast('수정되었습니다.'); closeOv('detailOverlay'); loadMyPosts(); }catch(e){ MxAlert.error(e.message); } };
-        $('delBtn').onclick=async ()=>{ const ok=await MxAlert.confirm('이 상담을 삭제하시겠습니까?'); if(!ok) return;
-          try{ await api('DELETE',`/posts/${id}`,{boardToken}); csToast('삭제되었습니다.'); closeOv('detailOverlay'); loadMyPosts(); }catch(e){ MxAlert.error(e.message); } };
+          const nt=await MxAlert.prompt(t('newTitle'), {defaultValue:p.title}); if(nt==null) return;
+          const nb=await MxAlert.prompt(t('newContent'), {defaultValue:p.body}); if(nb==null) return;
+          try{ await api('PUT',`/posts/${id}`,{boardToken,title:nt,body:nb}); csToast(t('updated')); closeOv('detailOverlay'); loadMyPosts(); }catch(e){ MxAlert.error(e.message); } };
+        $('delBtn').onclick=async ()=>{ const ok=await MxAlert.confirm(t('deleteConfirm')); if(!ok) return;
+          try{ await api('DELETE',`/posts/${id}`,{boardToken}); csToast(t('deleted')); closeOv('detailOverlay'); loadMyPosts(); }catch(e){ MxAlert.error(e.message); } };
       }catch(e){ MxAlert.error(e.message); }
     }
   </script>

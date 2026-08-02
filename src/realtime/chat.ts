@@ -133,8 +133,7 @@ export function initChat(io: SocketServer) {
       // 고객은 staff_only 메시지(시스템 질문/미공유 답변) 제외
       const onlyShared = ctx.role === 'customer' ? 'AND m.staff_only=0' : '';
       const [rows] = await pool.execute<any[]>(
-        `SELECT m.*, att.original_name, att.file_path, att.mime_type,
-                (SELECT COUNT(*) FROM chat_message_reads r WHERE r.message_id=m.id) AS read_cnt
+        `SELECT m.*, att.original_name, att.file_path, att.mime_type
            FROM chat_messages m LEFT JOIN chat_attachments att ON att.id=m.attachment_id
           WHERE m.conversation_id=? ${onlyShared} ORDER BY m.id DESC LIMIT 100`, [cid]);
       socket.emit('chat:history', { conversationId: cid, messages: rows.reverse().map(rowToMsg) });

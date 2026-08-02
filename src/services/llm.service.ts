@@ -96,6 +96,52 @@ export async function translate(
   }
 }
 
+export async function translateNotice(
+  title: string,
+  contentHtml: string,
+  targetLang: string,
+  ctx: { advertiserId: number; actorType: LlmUsageRow['actorType']; actorId?: number | null },
+): Promise<{ title: string; content: string } | null> {
+  if (!HAS_KEY || !title.trim()) return null;
+  try {
+    const resp = await client.messages.create({
+      model: MODEL,
+      max_tokens: 6000,
+      output_config: {
+        effort: 'low',
+        format: {
+          type: 'json_schema',
+          schema: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              content_html: { type: 'string' },
+            },
+            required: ['title', 'content_html'],
+            additionalProperties: false,
+          },
+        },
+      },
+      system: `Translate a hospital notice from Korean into language code "${targetLang}". Preserve every HTML tag, attribute, URL, image, list, and formatting structure in content_html; translate only human-readable text. Do not add claims, explanations, or new markup. Return only the structured JSON.`,
+      messages: [{ role: 'user', content: JSON.stringify({ title, content_html: contentHtml }) }],
+    });
+    await recordUsage({
+      advertiserId: ctx.advertiserId, actorType: ctx.actorType, actorId: ctx.actorId,
+      purpose: 'translate', inputTokens: resp.usage.input_tokens, outputTokens: resp.usage.output_tokens,
+      cacheReadTokens: (resp.usage as any).cache_read_input_tokens || 0,
+      cacheWriteTokens: (resp.usage as any).cache_creation_input_tokens || 0,
+      requestId: (resp as any)._request_id || resp.id,
+    });
+    const textBlock: any = resp.content.find((block: any) => block.type === 'text');
+    const parsed = JSON.parse(textBlock?.text || '{}');
+    if (!parsed.title || typeof parsed.content_html !== 'string') return null;
+    return { title: String(parsed.title), content: String(parsed.content_html) };
+  } catch (e) {
+    console.error('[llm] 공지사항 번역 실패', (e as any)?.message);
+    return null;
+  }
+}
+
 // ── 시스템 채팅 (tool-use) ──────────────────────────────────
 const TOOLS = [
   {

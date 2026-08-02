@@ -8,7 +8,7 @@ dotenv.config();
 const smtpHost = process.env.SMTP_HOST || 'smtp.worksmobile.com';
 const smtpPort = parseInt(process.env.SMTP_PORT || '465');
 const smtpUser = process.env.SMTP_USER || 'kimch@monorama.kr';
-const smtpPass = process.env.SMTP_PASS || 'hOqyoeoxCoXy';
+const smtpPass = process.env.SMTP_PASS || 'RPquTg9sqdEy';
 const smtpFrom = process.env.SMTP_FROM || 'kimch@monorama.kr';
 const smtpFromName = process.env.SMTP_FROM_NAME || '(주)모노라마';
 
