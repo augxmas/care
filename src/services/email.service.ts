@@ -43,15 +43,17 @@ export async function sendEmail(params: {
   templateKey:    string;
   to:             string;
   vars:           Record<string, string>;
+  subject?:       string;
+  html?:          string;
   campaignId?:    string;
   advertiserId?:  number;
   attachments?:   { filename: string; path: string }[];
 }): Promise<void> {
   const tpl = templates[params.templateKey];
-  if (!tpl) throw new Error(`이메일 템플릿을 찾을 수 없습니다: ${params.templateKey}`);
+  if (!tpl && (!params.subject || !params.html)) throw new Error(`이메일 템플릿을 찾을 수 없습니다: ${params.templateKey}`);
 
-  const subject = replacePlaceholders(tpl.subject, params.vars);
-  const html    = replacePlaceholders(tpl.body,    params.vars);
+  const subject = replacePlaceholders(params.subject || tpl.subject, params.vars);
+  const html    = replacePlaceholders(params.html || tpl.body, params.vars);
 
   let status: 'sent' | 'failed' = 'sent';
   let errorMsg = '';

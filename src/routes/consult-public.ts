@@ -12,6 +12,34 @@ import { countryToLang, langLabel, COMMON_LANGS } from '../utils/lang';
 
 const router = Router();
 const SECRET = process.env.SESSION_SECRET || 'monorama_secret';
+type ConsultLanguage = 'ko' | 'th' | 'en';
+
+function consultLanguage(value: unknown): ConsultLanguage {
+  const code = String(value || 'en').toLowerCase().split('-')[0];
+  return code === 'ko' || code === 'th' ? code : 'en';
+}
+function emailHtml(value: unknown): string {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c] || c));
+}
+function consultEmail(language: ConsultLanguage, kind: 'otp' | 'registered', values: { hospital: string; code: string; chatUrl?: string; title?: string }) {
+  const hospital = emailHtml(values.hospital), code = emailHtml(values.code), chatUrl = emailHtml(values.chatUrl), title = emailHtml(values.title);
+  const copy = {
+    ko: kind === 'otp'
+      ? { subject:`[${hospital}] 온라인 상담 인증코드`, heading:`${hospital} 온라인 1:1 상담`, intro:'온라인 상담 본인확인을 위한 인증코드입니다.', password:'이 6자리 코드는 상담 등록 후 제공되는 채팅 링크에 접속할 때 사용하는 비밀번호입니다.', keep:'상담 내역 확인과 채팅 참여에 필요하므로 안전하게 보관해 주세요.' }
+      : { subject:`[${hospital}] 상담 등록 및 채팅 안내`, heading:'상담이 등록되었습니다.', intro:`상담 “${title}”이 정상적으로 등록되었습니다.`, password:'아래 채팅 링크에서 이메일과 6자리 인증코드를 비밀번호로 입력해 주세요.', keep:'인증코드를 재발급하면 이전 코드는 사용할 수 없습니다.' },
+    th: kind === 'otp'
+      ? { subject:`[${hospital}] รหัสยืนยันสำหรับการปรึกษาออนไลน์`, heading:`ปรึกษาออนไลน์แบบ 1:1 กับ ${hospital}`, intro:'นี่คือรหัสยืนยันตัวตนสำหรับการปรึกษาออนไลน์ของคุณ', password:'รหัส 6 หลักนี้คือรหัสผ่านสำหรับเข้าใช้ลิงก์แชตที่จะแจ้งให้ทราบหลังส่งคำปรึกษา', keep:'โปรดเก็บรหัสนี้ไว้อย่างปลอดภัยเพื่อดูประวัติการปรึกษาและเข้าร่วมแชต' }
+      : { subject:`[${hospital}] ส่งคำปรึกษาเรียบร้อยแล้วและลิงก์แชต`, heading:'ส่งคำปรึกษาเรียบร้อยแล้ว', intro:`คำปรึกษา “${title}” ได้รับการลงทะเบียนแล้ว`, password:'ที่ลิงก์แชตด้านล่าง กรุณากรอกอีเมลและรหัสยืนยัน 6 หลักเป็นรหัสผ่าน', keep:'หากขอรหัสใหม่ รหัสเดิมจะไม่สามารถใช้ได้' },
+    en: kind === 'otp'
+      ? { subject:`[${hospital}] Online consultation verification code`, heading:`${hospital} private 1:1 consultation`, intro:'Here is your verification code for the online consultation.', password:'This 6-digit code is also the password for the chat link provided after you submit your consultation.', keep:'Keep it safe—you will need it to view your consultation and join the chat.' }
+      : { subject:`[${hospital}] Consultation submitted and chat link`, heading:'Your consultation has been submitted.', intro:`Your consultation “${title}” was registered successfully.`, password:'Open the chat link below and enter your email and 6-digit verification code as the password.', keep:'If you request a new code, the previous code will no longer work.' },
+  }[language];
+  const chat = kind === 'registered' ? `<div style="text-align:center;margin:24px 0"><a href="${chatUrl}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold">${language==='ko'?'채팅 시작':language==='th'?'เริ่มแชต':'Start chat'}</a></div><p style="font-size:12px;color:#64748b;word-break:break-all">${chatUrl}</p>` : '';
+  return {
+    subject: copy.subject,
+    html: `<div style="font-family:Arial,'Noto Sans KR','Noto Sans Thai',sans-serif;max-width:600px;margin:0 auto;padding:30px;border:1px solid #e2e8f0;border-radius:10px"><h2 style="color:#2563eb;text-align:center">${copy.heading}</h2><p>${copy.intro}</p><div style="background:#eff6ff;border:2px solid #2563eb;border-radius:8px;padding:20px;text-align:center;margin:20px 0"><div style="font-size:13px;color:#64748b">${language==='ko'?'인증코드 · 채팅 비밀번호':language==='th'?'รหัสยืนยัน · รหัสผ่านแชต':'Verification code · Chat password'}</div><div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#2563eb;margin-top:8px">${code}</div></div><div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:14px;color:#9a3412"><strong>${copy.password}</strong><br><span style="font-size:13px">${copy.keep}</span></div>${chat}</div>`,
+  };
+}
 
 // ── 유틸 ────────────────────────────────────────────────────
 function genCode(): string { return String(Math.floor(100000 + Math.random() * 900000)); }
@@ -128,6 +156,7 @@ router.get('/meta', async (req: Request, res: Response) => {
 // ── 인증코드 발송 ───────────────────────────────────────────
 router.post('/send-code', async (req: Request, res: Response) => {
   const adv = advOf(req); const email = String(req.body.email || '').trim();
+  const language = consultLanguage(req.body.language);
   if (!adv) return res.status(400).json({ error: '잘못된 접근입니다.' });
   if (!emailOk(email)) return res.status(400).json({ error: '이메일 형식이 올바르지 않습니다.' });
   // 레이트리밋: email당 10분 5회 + IP 10분 10회
@@ -144,7 +173,9 @@ router.post('/send-code', async (req: Request, res: Response) => {
   // 인증코드 = 비밀번호로 지속 보관 (재발급 시 갱신)
   await saveCredential(adv, email, code);
   try {
-    await sendEmail({ templateKey: 'consult_otp', to: email, vars: { code, hospital_name: await hospitalName(adv) }, advertiserId: adv });
+    const hospital = await hospitalName(adv);
+    const message = consultEmail(language, 'otp', { hospital, code });
+    await sendEmail({ templateKey: `consult_otp_${language}`, to: email, vars: {}, subject: message.subject, html: message.html, advertiserId: adv });
     res.json({ ok: true });
   } catch { res.status(500).json({ error: '인증코드 발송에 실패했습니다.' }); }
 });
@@ -174,7 +205,10 @@ router.post('/posts', async (req: Request, res: Response) => {
   if (!email) return res.status(401).json({ error: '본인확인이 필요합니다.' });
   const title = String(req.body.title || '').trim().slice(0, 200);
   const body = String(req.body.body || '').trim();
+  const code = String(req.body.code || '').trim();
+  const language = consultLanguage(req.body.language);
   if (!title || !body) return res.status(400).json({ error: '제목과 내용을 입력하세요.' });
+  if (!code || !(await checkCredential(adv, email, code))) return res.status(400).json({ error: '인증코드가 올바르지 않습니다.' });
 
   const cust = await resolveCustomer(adv, email);
   const [r]: any = await pool.execute(
@@ -183,7 +217,32 @@ router.post('/posts', async (req: Request, res: Response) => {
      VALUES (?,?,?,?,?,?,?)`,
     [adv, email, cust.hospital_patient_id, cust.visit_id, cust.customer_id, title, body]
   );
-  res.json({ ok: true, id: r.insertId });
+  const postId = Number(r.insertId);
+  const [conversation]: any = await pool.execute(
+    `INSERT INTO chat_conversations
+       (advertiser_id,post_id,customer_email,customer_id,hospital_patient_id,customer_lang,status)
+     VALUES (?,?,?,?,?,?,?)`,
+    [adv, postId, email, cust.customer_id, cust.hospital_patient_id, language, 'open'],
+  );
+  await pool.execute('UPDATE consult_posts SET conversation_id=? WHERE id=? AND advertiser_id=?', [conversation.insertId, postId, adv]);
+  await pool.execute(
+    `INSERT INTO chat_participants
+       (conversation_id,advertiser_id,participant_type,participant_id,display_name,lang)
+     VALUES (?,?,'customer',NULL,?,?)`,
+    [conversation.insertId, adv, email, language],
+  );
+  const baseUrl = (process.env.BASE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+  const chatUrl = `${baseUrl}/consult-chat?h=${adv}&p=${postId}`;
+  let emailSent = true;
+  try {
+    const hospital = await hospitalName(adv);
+    const message = consultEmail(language, 'registered', { hospital, code, chatUrl, title });
+    await sendEmail({ templateKey: `consult_registered_${language}`, to: email, vars: {}, subject: message.subject, html: message.html, advertiserId: adv });
+  } catch (error) {
+    emailSent = false;
+    console.error('[consult] registration email failed', (error as any)?.message);
+  }
+  res.json({ ok: true, id: postId, chat_url: chatUrl, email_sent: emailSent });
 });
 
 router.post('/posts/:id/attachments', async (req: Request, res: Response, next: NextFunction) => {
