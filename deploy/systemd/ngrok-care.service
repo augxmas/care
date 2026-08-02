@@ -1,0 +1,18 @@
+[Unit]
+Description=ngrok tunnel for Care Hospital CRM
+After=network-online.target care.service
+Wants=network-online.target
+Requires=care.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+ExecStart=/usr/local/bin/ngrok http 3000 --url https://thai.bomcare.kr --config /home/ubuntu/.config/ngrok/ngrok.yml
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
