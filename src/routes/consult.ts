@@ -69,8 +69,8 @@ router.get('/posts', viewer, async (req: Request, res: Response) => {
        FROM consult_posts p
        LEFT JOIN doctors d ON d.id=p.assigned_doctor_id
        LEFT JOIN managers m ON m.id=p.handling_manager_id
-       ${where} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
-    [...params, size, offset]
+       ${where} ORDER BY p.created_at DESC LIMIT ${size} OFFSET ${offset}`,
+    params
   );
   res.json({ ok: true, data, total: cnt[0].total });
 });
